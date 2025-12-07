@@ -1,0 +1,18 @@
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file 'C:\Users\USER\GradeX\android\app\build.gradle' line: 1
+
+* What went wrong:
+A problem occurred evaluating project ':app'.
+> Failed to apply plugin 'com.android.internal.version-check'.
+   > Minimum supported Gradle version is 8.7. Current version is 8.6. If using the gradle wrapper, try editing the distributionUrl in C:\Users\USER\GradeX\android\gradle\wrapper\gradle-wrapper.properties to gradle-8.7-all.zip
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4s

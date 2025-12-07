@@ -151,6 +151,49 @@ export default function AdminDashboard() {
     }
   }, [searchQuery, users]);
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'deleteUser',
+          userId: userId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete user');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully',
+      });
+
+      // Refresh data
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete user',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/admin/login');
@@ -165,9 +208,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden relative">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
+      <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -188,7 +231,8 @@ export default function AdminDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <main className="flex-1 overflow-y-auto p-4 space-y-8 scrollbar-hide">
+        <div className="max-w-7xl mx-auto space-y-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -309,12 +353,13 @@ export default function AdminDashboard() {
                     <TableHead>Level</TableHead>
                     <TableHead>Semester</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         No users found
                       </TableCell>
                     </TableRow>
@@ -330,6 +375,32 @@ export default function AdminDashboard() {
                             ? new Date(u.created_at).toLocaleDateString()
                             : '-'}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleDeleteUser(u.id, u.name)}
+                          >
+                            <span className="sr-only">Delete</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="w-4 h-4"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            </svg>
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -341,6 +412,7 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </main>
 
       {/* Footer */}

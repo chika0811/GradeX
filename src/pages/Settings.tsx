@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, BookOpen, Shield, Loader2 } from 'lucide-react';
+import { ArrowLeft, LogOut, BookOpen, Shield, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getStoredData, saveTheme, saveTutorialCompleted } from '@/lib/storage';
+import { getStoredData, saveTutorialCompleted } from '@/lib/storage';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -97,11 +97,7 @@ export default function Settings() {
     }
   };
 
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setThemeState(newTheme);
-    saveTheme(newTheme);
-    applyTheme(newTheme);
-  };
+
 
   const handleLogout = async () => {
     await logout();
@@ -110,9 +106,9 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden relative">
       {/* Header */}
-      <header className="bg-card border-b border-border">
+      <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
@@ -124,7 +120,8 @@ export default function Settings() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 overflow-y-auto p-4 pb-32 space-y-6 scrollbar-hide">
+        <div className="max-w-2xl mx-auto space-y-6">
         {/* Profile */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Profile Information</h2>
@@ -214,36 +211,7 @@ export default function Settings() {
           </div>
         </Card>
 
-        {/* Appearance */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Appearance</h2>
-          <div className="flex items-center justify-between">
-            <Label>Theme</Label>
-            <div className="flex gap-2">
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleThemeChange('light')}
-              >
-                <Sun className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleThemeChange('dark')}
-              >
-                <Moon className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={theme === 'system' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleThemeChange('system')}
-              >
-                <Monitor className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </Card>
+
 
         {/* Tutorial */}
         <Card className="p-6">
@@ -367,6 +335,7 @@ export default function Settings() {
             Logout
           </Button>
         </Card>
+        </div>
       </main>
 
       {/* Footer */}

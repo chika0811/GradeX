@@ -54,9 +54,9 @@ export default function Courses() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden relative">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
+      <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
@@ -84,7 +84,7 @@ export default function Courses() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className="flex-1 overflow-y-auto p-4 pb-32 space-y-6 scrollbar-hide">
         {/* Current Courses */}
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-3">Current Semester</h2>

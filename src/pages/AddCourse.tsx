@@ -75,9 +75,9 @@ export default function AddCourse() {
   const isCarryover = formData.score < 40;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden relative">
       {/* Header */}
-      <header className="bg-card border-b border-border">
+      <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/courses')}>
@@ -96,7 +96,8 @@ export default function AddCourse() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="flex-1 overflow-y-auto p-4 pb-32 scrollbar-hide">
+        <div className="max-w-2xl mx-auto space-y-6">
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -192,6 +193,7 @@ export default function AddCourse() {
             </div>
           </form>
         </Card>
+        </div>
       </main>
 
       {/* Footer */}

@@ -1,4 +1,4 @@
-// Gradex Smart Assistant - AI for Academic Performance
+// Liona AI - AI for Academic Performance
 // Powered by Noskytech
 
 interface UserContext {
@@ -61,7 +61,7 @@ function generateCGPAExplanation(userContext: UserContext): string {
   if (cgpa === 0) {
     return `${name} you have not added any courses yet
 
-Once you add them Gradex will calculate your CGPA automatically
+Once you add them Liona will calculate your CGPA automatically
 
 Here is the 5 point 0 grading system
 
@@ -78,7 +78,7 @@ F gives you 0
 To calculate GPA multiply each grade point by the course units then divide the total by all units registered`;
   }
 
-  let response = `According to your data in Gradex ${name}
+  let response = `According to your data in Liona ${name}
 
 Your current CGPA is ${cgpa.toFixed(2)}`;
   
@@ -143,7 +143,7 @@ function generateStudyAdvice(name: string, query: string): string {
   const lower = query.toLowerCase();
   
   if (lower.includes('improve') || lower.includes('boost') || lower.includes('increase')) {
-    return `Here is what Gradex suggests for improving your grades ${name}
+    return `Here is what Liona suggests for improving your grades ${name}
 
 Focus on high unit courses first since they have more weight in your GPA calculation
 
@@ -155,7 +155,7 @@ Create a study schedule that allocates time based on course difficulty not just 
   }
   
   if (lower.includes('exam') || lower.includes('test') || lower.includes('prepare')) {
-    return `Exam preparation tips from Gradex ${name}
+    return `Exam preparation tips from Liona ${name}
 
 Start revision at least 2 weeks before exams
 
@@ -168,7 +168,7 @@ Prioritize understanding concepts over memorizing
 Get enough sleep before exams since tired brains perform poorly`;
   }
   
-  return `Study guidance from Gradex ${name}
+  return `Study guidance from Liona ${name}
 
 Consistency beats intensity
 
@@ -199,7 +199,7 @@ Then I will calculate your projected new CGPA and show you exactly how it change
 }
 
 function generateCourseLoadAdvice(name: string): string {
-  return `Course load guidance from Gradex ${name}
+  return `Course load guidance from Liona ${name}
 
 The optimal course load is typically 18 to 22 units per semester
 
@@ -213,7 +213,7 @@ Balance difficult and easier courses in the same semester`;
 }
 
 function generateGradingExplanation(): string {
-  return `Here is the 5 point 0 grading system used in Gradex
+  return `Here is the 5 point 0 grading system used in Liona
 
 A or A plus equals 5 point 0
 B plus equals 4 point 5
@@ -253,7 +253,7 @@ export function generateResponse(message: string, userContext: UserContext, calc
   if (isGreeting(message)) {
     return `Hello ${userContext.name}
 
-Welcome to Gradex Smart Assistant powered by Noskytech
+Welcome to Liona AI powered by Noskytech
 
 I can help you with GPA and CGPA calculations academic performance analysis and study planning
 
@@ -271,7 +271,7 @@ Gradex is here to help`;
   
   // Handle about/creator queries
   if (isAboutQuery(message)) {
-    return `I am Gradex Smart Assistant powered by Noskytech
+    return `I am Liona AI powered by Noskytech
 
 My purpose is to help students understand and improve their academic performance using the 5 point 0 grading system
 
@@ -344,7 +344,7 @@ export function generateWelcomeMessage(userContext: UserContext): string {
   
   let welcome = `Hello ${name}
 
-I am Gradex Smart Assistant powered by Noskytech
+I am Liona AI
 
 I help students understand and improve their academic performance`;
   

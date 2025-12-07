@@ -22,7 +22,7 @@ const legalContent = {
       },
       {
         heading: 'AI Assistant',
-        text: 'The Gradex Smart Assistant processes your queries to provide academic guidance. Conversations are handled securely and are not shared with external parties.',
+        text: 'Liona AI processes your queries to provide academic guidance. Conversations are handled securely and are not shared with external parties.',
       },
       {
         heading: 'Your Rights',
@@ -108,7 +108,7 @@ const legalContent = {
       },
       {
         heading: 'The Creator',
-        text: 'Gradex is built and powered by Noskytech, a Nigerian tech company focused on creating innovative solutions for students and educational institutions.',
+        text: 'Gradex is built on a partnership between Noskytech, a Nigerian tech company focused on creating innovative solutions for students and.\n\nDnovit corporation, the Lead software Developer',
       },
       {
         heading: 'Support',
@@ -132,9 +132,9 @@ export default function Legal() {
   const Icon = content.icon;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden relative">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
+      <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -149,20 +149,22 @@ export default function Legal() {
       </header>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="flex-1 overflow-y-auto p-4 pb-32 scrollbar-hide">
+        <div className="max-w-2xl mx-auto space-y-6">
         <Card className="p-6 space-y-6">
           {content.content.map((section, index) => (
             <div key={index} className="space-y-2">
               <h2 className="text-lg font-semibold text-foreground">{section.heading}</h2>
-              <p className="text-muted-foreground leading-relaxed">{section.text}</p>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{section.text}</p>
             </div>
           ))}
         </Card>
 
         {/* Last Updated */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Last updated: December 2024
+          Last updated: December 2025
         </p>
+        </div>
       </main>
 
       {/* Footer */}

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CourseProvider } from "@/contexts/CourseContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
 import SplashScreen from "@/components/SplashScreen";
 import Auth from "./pages/Auth";
@@ -13,7 +14,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import AddCourse from "./pages/AddCourse";
-import AIChat from "./pages/AIChat";
+import { ChatWidget } from "@/components/ChatWidget";
 import Settings from "./pages/Settings";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -85,7 +86,6 @@ function AppRoutes() {
       <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
       <Route path="/add-course" element={<ProtectedRoute><AddCourse /></ProtectedRoute>} />
       <Route path="/edit-course/:id" element={<ProtectedRoute><AddCourse /></ProtectedRoute>} />
-      <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/legal/:page" element={<Legal />} />
       <Route path="/admin/login" element={<AdminLogin />} />
@@ -117,6 +117,7 @@ function AppContent() {
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <AppRoutes />
       <OnboardingTutorial />
+      <ChatWidget />
     </>
   );
 }
@@ -128,9 +129,11 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <CourseProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <ChatProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </ChatProvider>
         </CourseProvider>
       </AuthProvider>
     </TooltipProvider>

@@ -1,15 +1,45 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourses } from '@/contexts/CourseContext';
+import { useChat } from '@/contexts/ChatContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BookOpen, AlertCircle, Settings, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, BookOpen, AlertCircle, Settings, Sparkles, Loader2, Sun, Moon, Monitor, Shield } from 'lucide-react';
 import GPAChart from '@/components/GPAChart';
+import { useState, useEffect } from 'react';
+import { getStoredData, saveTheme } from '@/lib/storage';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { courses, getCurrentSemesterCourses, getCGPA, getCarryovers, loading } = useCourses();
+  const { setIsOpen } = useChat();
   const navigate = useNavigate();
+
+  const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>(
+    getStoredData().theme
+  );
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const applyTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    const root = document.documentElement;
+    if (newTheme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+      root.classList.toggle('dark', systemTheme === 'dark');
+    } else {
+      root.classList.toggle('dark', newTheme === 'dark');
+    }
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    setThemeState(newTheme);
+    saveTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   const currentCourses = getCurrentSemesterCourses();
   const cgpa = getCGPA();
@@ -24,9 +54,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <header className="bg-card border-b border-border">
+      <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Welcome, {user?.name}</h1>
@@ -34,14 +64,43 @@ export default function Dashboard() {
               Level {user?.level} • Semester {user?.semester}
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
-            <Settings className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+              <Button
+                variant={theme === 'light' ? 'default' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handleThemeChange('light')}
+              >
+                <Sun className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={theme === 'dark' ? 'default' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handleThemeChange('dark')}
+              >
+                <Moon className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={theme === 'system' ? 'default' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handleThemeChange('system')}
+              >
+                <Monitor className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+              <Settings className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 overflow-y-auto p-4 pb-32 space-y-6 scrollbar-hide">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* CGPA Card */}
         <Card className="p-8 text-center bg-gradient-primary text-white shadow-elevated">
           <div className="flex flex-col items-center">
@@ -113,6 +172,20 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="space-y-3">
+          {user?.isAdmin && (
+            <Button
+              onClick={() => navigate('/admin')}
+              variant="outline"
+              className="w-full h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5"
+            >
+              <Shield className="w-5 h-5 text-primary" />
+              <div className="text-left">
+                <div className="font-semibold text-primary">Admin Dashboard</div>
+                <div className="text-xs opacity-70">Manage users and courses</div>
+              </div>
+            </Button>
+          )}
+
           <Button
             onClick={() => navigate('/courses')}
             className="w-full h-auto py-4 justify-start gap-3"
@@ -157,6 +230,7 @@ export default function Dashboard() {
             </div>
           </Card>
         )}
+        </div>
       </main>
 
       {/* Footer */}
@@ -171,7 +245,7 @@ export default function Dashboard() {
 
       {/* Floating AI Button */}
       <button
-        onClick={() => navigate('/ai-chat')}
+        onClick={() => setIsOpen(true)}
         className="fixed bottom-20 right-6 w-14 h-14 rounded-full bg-gradient-ai shadow-glow flex items-center justify-center animate-float hover:scale-110 transition-transform"
       >
         <Sparkles className="w-6 h-6 text-white" />

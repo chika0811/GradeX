@@ -62,53 +62,54 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 215 30% 8%;
-    --foreground: 0 0% 98%;
+    /* Modern Dark Theme - Deep Blue-Grey Base */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 215 25% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 215 25% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 215 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 100% 60%; /* Vibrant Blue - slightly brighter for dark mode */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 215 20% 18%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217 33% 22%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 215 20% 18%;
-    --muted-foreground: 215 16% 65%;
+    --muted: 217 33% 22%;
+    --muted-foreground: 215 20% 75%; /* Better contrast for muted text */
 
-    --accent: 215 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 100% 60%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 62% 40%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 22%;
-    --input: 215 20% 22%;
-    --ring: 215 100% 50%;
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 210 100% 60%;
 
-    --success: 142 70% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 142 70% 50%;
+    --success-foreground: 142 80% 10%;
 
-    --ai-glow: 215 100% 60%;
-    --ai-glow-soft: 215 100% 20%;
+    --ai-glow: 210 100% 70%;
+    --ai-glow-soft: 217 33% 25%;
 
     --gradient-primary: linear-gradient(
       135deg,
-      hsl(215 100% 45%),
-      hsl(215 100% 55%)
+      hsl(210 100% 60%),
+      hsl(220 100% 65%)
     );
     --gradient-ai: linear-gradient(
       135deg,
-      hsl(215 100% 55%),
-      hsl(220 100% 65%)
+      hsl(210 100% 65%),
+      hsl(250 100% 75%)
     );
 
-    --shadow-elevated: 0 10px 40px -10px hsl(215 100% 50% / 0.3);
-    --shadow-glow: 0 0 40px hsl(215 100% 60% / 0.4);
+    --shadow-elevated: 0 10px 40px -10px hsl(0 0% 0% / 0.5); /* Stronger shadow for depth */
+    --shadow-glow: 0 0 50px hsl(210 100% 60% / 0.15);
   }
 }
 

@@ -1,3 +1,4 @@
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -5,121 +6,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are Gradex Smart Assistant, the official academic assistant inside the Gradex App — Powered by Noskytech.
+const SYSTEM_PROMPT = `You are Liona AI, an intelligent academic assistant for the GradeX app.
+CORE RULES:
+1. IDENTITY: You are Liona AI. Never use "Gradex Assistant". You are powered by Noskytech.
+2. TONE: Friendly, witty, natural. Be CONCISE (under 30 words). No long lists unless asked.
+3. MATH: You MUST solve arithmetic (e.g., "5*5", "GPA calc").
+4. CONTEXT: Use available user data (CGPA, courses) to personalize advice.
+5. GOAL: Help students with grades, study plans, and calculations.
 
-Your ONLY job is to help students understand and improve their academic performance using the 5.0 grading system.
-You must be precise, friendly, helpful, and strictly academic.
+DO NOT refuse math. DO NOT be robotic. DO NOT be verbose.`;
 
-🎓 YOUR PURPOSE
-You exist inside a CGPA calculator app.
-Your purpose is to:
-1. Calculate GPA/CGPA (5.0 scale)
-2. Analyze academic performance
-3. Give actionable study advice
-4. Predict possible CGPA outcomes based on grades provided
-5. Explain why GPA goes up or down
-6. Help with course load planning
-7. Provide clarity, not conversation
-
-🚫 WHAT YOU MUST NOT DO
-You are NOT a general chatbot.
-So you must never:
-- Tell jokes
-- Answer random questions (history, sports, politics, etc.)
-- Chat casually
-- Give medical/legal/financial/life advice
-- Generate harmful or sensitive content
-- Invent fake facts
-
-If a user asks something outside academics say:
-"I'm here to help with GPA, CGPA, study planning, and academic guidance only."
-
-🟦 BRAND REQUIREMENTS
-App Name: Gradex
-Brand: Powered by Noskytech
-
-Whenever appropriate (not every message), include subtle supportive phrases like:
-- "According to your data in Gradex…"
-- "Here's what Gradex suggests…"
-- "Powered by Noskytech, I analyzed your inputs…"
-
-Never overuse branding. Keep it professional and minimal.
-
-📊 5.0 GRADING SYSTEM (STRICT)
-Use this mapping:
-- A / A+ = 5.0
-- B+ = 4.5
-- B = 4.0
-- C+ = 3.5
-- C = 3.0
-- D+ = 2.5
-- D = 2.0
-- E = 1.0
-- F = 0.0
-
-If a user enters an invalid grade, respond politely with:
-"That grade isn't part of the 5.0 system used in Gradex. Here are the valid grade options: A, A+, B+, B, C+, C, D+, D, E, F."
-
-🧮 GPA & CGPA CALCULATION RULES
-GPA = (sum of (grade point × course units)) / (total units)
-CGPA = (sum of (semester GPA × semester units)) / (total accumulated units)
-
-When user gives data, ALWAYS:
-- Recalculate precisely
-- Show step-by-step
-- Offer correction if something seems inconsistent
-
-If numbers are missing, ask for clarification clearly.
-
-📘 ACADEMIC ASSISTANT BEHAVIOR
-Your advice must be:
-- Practical
-- Encouraging
-- Never judgmental
-- Tailored to the user's grades
-
-Avoid cliché advice like "read more" or "work harder".
-Use specific statements like:
-- "Your strongest courses are reading-based. Consider spending more time practicing calculations for MAT 202."
-- "Your lowest scores come from high-unit courses. Improving just one of these can shift your CGPA significantly."
-
-📈 COURSE LOAD ANALYSIS RULES
-If user asks for help with course load:
-- Check units
-- Warn if >24 units
-- Suggest an optimal range (18–22 units)
-- Explain workload impact on grades
-
-🛡️ SAFETY & RESPONSIBILITY
-If a user expresses stress, fear, or panic, respond calmly:
-"It's okay to feel overwhelmed. Let's work through your courses one step at a time so you have a clear plan."
-Never provide mental health advice. Stay academic only.
-
-🧩 RESPONSE STYLE
-Your tone must be:
-- Friendly
-- Short
-- Direct
-- Helpful
-- Professional
-- Student-friendly
-
-Avoid long paragraphs unless the user specifically requests detailed breakdown.
-Keep responses concise and actionable.
-
-You are Gradex Smart Assistant — Powered by Noskytech.`;
-
-serve(async (req) => {
+// @ts-ignore
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { messages, userContext } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // @ts-ignore
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     // Build context-aware system message
@@ -133,53 +42,112 @@ serve(async (req) => {
 - Level: ${userContext.level || 'Not set'}
 - Semester: ${userContext.semester || 'Not set'}
 
-Use this data to personalize your responses when relevant.`;
+Use this data to personalize your responses.`;
     }
 
-    console.log("Sending request to Lovable AI Gateway");
-    
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: contextualSystem },
-          ...messages,
-        ],
-        stream: true,
-      }),
-    });
+    // Transform messages for Gemini
+    const geminiContents = messages.map((m: any) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    console.log("Sending request to Google Gemini API");
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: contextualSystem }]
+          },
+          contents: geminiContents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000,
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      
-      return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("Gemini API error:", response.status, errorText);
+      throw new Error(`Gemini API Error: ${response.status} ${errorText}`);
     }
 
-    return new Response(response.body, {
+    // Create a stream that transforms Gemini's JSON format to the expected SSE format
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    // Process the Gemini stream
+    (async () => {
+      try {
+        if (!response.body) throw new Error("No response body from Gemini");
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          let depth = 0;
+          let start = -1;
+          
+          for (let i = 0; i < buffer.length; i++) {
+            if (buffer[i] === '{') {
+              if (depth === 0) start = i;
+              depth++;
+            } else if (buffer[i] === '}') {
+              depth--;
+              if (depth === 0 && start !== -1) {
+                // Found a complete top-level object
+                const jsonStr = buffer.slice(start, i + 1);
+                
+                try {
+                  const data = JSON.parse(jsonStr);
+                  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (text) {
+                    // Transform to OpenAI style SSE
+                    const sseMessage = `data: ${JSON.stringify({
+                      choices: [{ delta: { content: text } }]
+                    })}\n\n`;
+                    await writer.write(encoder.encode(sseMessage));
+                  }
+                } catch (e) {
+                  console.error("JSON parse error", e);
+                }
+                
+                // Remove processed chunk from buffer
+                buffer = buffer.slice(i + 1);
+                i = -1; // Reset loop to scan new buffer from start
+                start = -1;
+              }
+            }
+          }
+        }
+        
+        // Final "DONE" message
+        await writer.write(encoder.encode("data: [DONE]\n\n"));
+        await writer.close();
+
+      } catch (err) {
+        console.error("Stream processing error:", err);
+        await writer.abort(err);
+      }
+    })();
+
+    return new Response(readable, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
+
   } catch (error) {
     console.error("Chat error:", error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
