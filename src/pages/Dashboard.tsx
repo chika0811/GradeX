@@ -176,18 +176,19 @@ export default function Dashboard() {
             <Button
               onClick={() => navigate('/admin')}
               variant="outline"
-              className="w-full h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5"
+              className="w-full h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
             >
-              <Shield className="w-5 h-5 text-primary" />
+              <Shield className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
               <div className="text-left">
-                <div className="font-semibold text-primary">Admin Dashboard</div>
-                <div className="text-xs opacity-70">Manage users and courses</div>
+                <div className="font-semibold text-primary group-hover:text-white transition-colors">Admin Dashboard</div>
+                <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">Manage users and courses</div>
               </div>
             </Button>
           )}
 
           <Button
             onClick={() => navigate('/courses')}
+            variant="outline"
             className="w-full h-auto py-4 justify-start gap-3"
           >
             <BookOpen className="w-5 h-5" />

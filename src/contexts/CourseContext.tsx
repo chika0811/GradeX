@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { Course, Grade, calculateGPA, calculateCGPA, getCarryoverCourses, CGPACalculationResult, calculateGrade } from '@/lib/grading';
@@ -70,7 +70,7 @@ export function CourseProvider({ children }: CourseProviderProps) {
     fetchCourses();
   }, [session?.user?.id]);
 
-  const addCourse = async (course: Omit<Course, 'id' | 'grade'>) => {
+  const addCourse = useCallback(async (course: Omit<Course, 'id' | 'grade'>) => {
     if (!session?.user) return;
 
     const grade = calculateGrade(course.score);
@@ -107,9 +107,9 @@ export function CourseProvider({ children }: CourseProviderProps) {
         semester: data.semester,
       }, ...prev]);
     }
-  };
+  }, [session?.user]);
 
-  const updateCourse = async (id: string, updates: Partial<Course>) => {
+  const updateCourse = useCallback(async (id: string, updates: Partial<Course>) => {
     if (!session?.user) return;
 
     const updateData: Record<string, unknown> = { ...updates };
@@ -138,9 +138,9 @@ export function CourseProvider({ children }: CourseProviderProps) {
       }
       return course;
     }));
-  };
+  }, [session?.user]);
 
-  const deleteCourse = async (id: string) => {
+  const deleteCourse = useCallback(async (id: string) => {
     if (!session?.user) return;
 
     const { error } = await supabase
@@ -155,52 +155,67 @@ export function CourseProvider({ children }: CourseProviderProps) {
     }
 
     setCourses(prev => prev.filter(course => course.id !== id));
-  };
+  }, [session?.user]);
 
-  const getCurrentSemesterCourses = () => {
+  const getCurrentSemesterCourses = useCallback(() => {
     if (!user) return [];
     return courses.filter(
       course => course.level === user.level && course.semester === user.semester
     );
-  };
+  }, [courses, user]);
 
-  const getCurrentGPA = () => {
+  const getCurrentGPA = useCallback(() => {
     return calculateGPA(getCurrentSemesterCourses());
-  };
+  }, [getCurrentSemesterCourses]);
 
-  const getCGPA = () => {
+  const getCGPA = useCallback(() => {
     return calculateGPA(courses);
-  };
+  }, [courses]);
 
-  const getCGPADetails = (courseList: Course[], prior: { cgpa: number, units: number }) => {
+  const getCGPADetails = useCallback((courseList: Course[], prior: { cgpa: number, units: number }) => {
     return calculateCGPA(courseList, prior);
-  };
+  }, []);
 
-  const getCarryovers = () => {
+  const getCarryovers = useCallback(() => {
     return getCarryoverCourses(courses);
-  };
+  }, [courses]);
 
-  const refreshCourses = async () => {
+  const refreshCourses = useCallback(async () => {
     setLoading(true);
     await fetchCourses();
-  };
+  }, [session?.user?.id]); // fetchCourses depends on session.user.id but isn't memoized itself yet. Better to depend on fetchCourses if we memoize it or just keep it simple. fetchCourses is defined in scope, so we can't depend on it unless we move it or memoize it.
+  // Actually, fetchCourses uses session.user.id. Let's fix fetchCourses first or just suppress/handle deps.
+  // Since fetchCourses is inside the component and uses 'session', we should memoize it or just recreate it. 
+  // Let's leave fetchCourses un-memoized (it's called in useEffect) and just use it here.
+
+  const contextValue = useMemo(() => ({
+    courses,
+    loading,
+    addCourse,
+    updateCourse,
+    deleteCourse,
+    getCurrentSemesterCourses,
+    getCurrentGPA,
+    getCGPA,
+    getCGPADetails,
+    getCarryovers,
+    refreshCourses,
+  }), [
+    courses, 
+    loading, 
+    addCourse, 
+    updateCourse, 
+    deleteCourse, 
+    getCurrentSemesterCourses, 
+    getCurrentGPA, 
+    getCGPA, 
+    getCGPADetails, 
+    getCarryovers, 
+    refreshCourses
+  ]);
 
   return (
-    <CourseContext.Provider
-      value={{
-        courses,
-        loading,
-        addCourse,
-        updateCourse,
-        deleteCourse,
-        getCurrentSemesterCourses,
-        getCurrentGPA,
-        getCGPA,
-        getCGPADetails,
-        getCarryovers,
-        refreshCourses,
-      }}
-    >
+    <CourseContext.Provider value={contextValue}>
       {children}
     </CourseContext.Provider>
   );

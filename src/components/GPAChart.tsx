@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -24,7 +24,7 @@ interface SemesterData {
   fullName: string;
 }
 
-export default function GPAChart({ courses }: GPAChartProps) {
+const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
   const chartData = useMemo(() => {
     // Group courses by level and semester
     const grouped: Record<string, Course[]> = {};
@@ -184,4 +184,6 @@ export default function GPAChart({ courses }: GPAChartProps) {
       </CardContent>
     </Card>
   );
-}
+});
+
+export default GPAChart;

@@ -31,7 +31,7 @@ export default function AddCourse() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.code || !formData.title || formData.score < 0 || formData.score > 100) {
+    if (!formData.code || formData.score < 0 || formData.score > 100) {
       toast({
         title: 'Invalid Input',
         description: 'Please check all fields and ensure score is between 0-100',
@@ -51,6 +51,7 @@ export default function AddCourse() {
       } else {
         await addCourse({
           ...formData,
+          title: formData.title || formData.code, // Default title to code if empty
           level: user?.level || '100L',
           semester: user?.semester || '1st',
         });
@@ -112,17 +113,7 @@ export default function AddCourse() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="title">Course Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g., Introduction to Computer Science"
-                required
-                disabled={isLoading}
-              />
-            </div>
+
 
             <div>
               <Label htmlFor="units">Unit Load *</Label>

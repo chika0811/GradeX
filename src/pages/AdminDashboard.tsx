@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Loader2,
   TrendingUp,
+  ArrowLeft,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -214,6 +215,14 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/dashboard')}
+                title="Return to App"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                 <ShieldCheck className="w-6 h-6 text-primary" />
               </div>
