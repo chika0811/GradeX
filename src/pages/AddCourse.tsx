@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { calculateGrade } from '@/lib/grading';
 export default function AddCourse() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { courses, addCourse, updateCourse } = useCourses();
   const { toast } = useToast();
@@ -26,6 +27,7 @@ export default function AddCourse() {
     title: existingCourse?.title || '',
     units: existingCourse?.units || 3,
     score: existingCourse?.score || 0,
+    semester: existingCourse?.semester || searchParams.get('semester') || '1st',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +55,6 @@ export default function AddCourse() {
           ...formData,
           title: formData.title || formData.code, // Default title to code if empty
           level: user?.level || '100L',
-          semester: user?.semester || '1st',
         });
         toast({
           title: 'Course Added',
@@ -81,7 +82,7 @@ export default function AddCourse() {
       <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/courses')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -113,10 +114,8 @@ export default function AddCourse() {
               />
             </div>
 
-
-
             <div>
-              <Label htmlFor="units">Unit Load *</Label>
+              <Label htmlFor="units">Credit Unit *</Label>
               <Input
                 id="units"
                 type="number"
@@ -130,17 +129,56 @@ export default function AddCourse() {
             </div>
 
             <div>
-              <Label htmlFor="score">Score (0-100) *</Label>
-              <Input
-                id="score"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.score}
-                onChange={(e) => setFormData({ ...formData, score: parseInt(e.target.value) })}
+              <Label htmlFor="grade">Grade *</Label>
+              <select
+                id="grade"
                 required
                 disabled={isLoading}
-              />
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={calculateGrade(formData.score)}
+                onChange={(e) => {
+                  const grade = e.target.value;
+                  let score = 0;
+                  // Set score based on minimum value for the grade
+                  if (grade === 'A') score = 70;
+                  else if (grade === 'B') score = 60;
+                  else if (grade === 'C') score = 50;
+                  else if (grade === 'D') score = 45;
+                  else if (grade === 'E') score = 40;
+                  else score = 0; // F
+                  
+                  setFormData({ ...formData, score });
+                }}
+              >
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+              </select>
+            </div>
+
+
+
+            <div>
+              <Label htmlFor="session">Academic Session</Label>
+              <select
+                id="session"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isLoading}
+              >
+                <option value="">Select Academic Session</option>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const currentYear = new Date().getFullYear();
+                  const startYear = currentYear - 11 + i;
+                  return `${startYear}/${startYear + 1}`;
+                }).map((session) => (
+                  <option key={session} value={session}>
+                    {session}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Grade Preview */}
@@ -176,7 +214,7 @@ export default function AddCourse() {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/courses')}
+                onClick={() => navigate('/dashboard')}
                 disabled={isLoading}
               >
                 Cancel

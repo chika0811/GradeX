@@ -65,9 +65,28 @@ export default function Settings() {
     semester: user?.semester || '1st',
   });
 
+  const [feedbackCount, setFeedbackCount] = useState(() => {
+    const now = new Date();
+    const monthKey = `feedback_limit_${user?.email || 'guest'}_${now.getMonth()}_${now.getFullYear()}`;
+    return parseInt(localStorage.getItem(monthKey) || '0');
+  });
+
   const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>(
     getStoredData().theme
   );
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        about: user.about || '',
+        level: user.level || '100L',
+        semester: user.semester || '1st',
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     applyTheme(theme);
@@ -98,6 +117,53 @@ export default function Settings() {
   };
 
 
+
+  const handleFeedbackSubmit = async () => {
+    if (!formData.about.trim()) {
+      toast({ title: 'Error', description: 'Please enter some feedback.', variant: 'destructive' });
+      return;
+    }
+
+    // Rate limit check
+    const now = new Date();
+    const monthKey = `feedback_limit_${user?.email || 'guest'}_${now.getMonth()}_${now.getFullYear()}`;
+    const currentCount = parseInt(localStorage.getItem(monthKey) || '0');
+
+    if (currentCount >= 3) {
+      toast({
+        title: 'Limit Reached',
+        description: 'You can only send 3 feedback messages per month.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('https://formspree.io/f/xbdlbrzl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: user?.email,
+          message: formData.about,
+          name: user?.name
+        })
+      });
+
+      if (response.ok) {
+        const newCount = currentCount + 1;
+        localStorage.setItem(monthKey, newCount.toString());
+        setFeedbackCount(newCount);
+        toast({ title: 'Feedback Sent', description: 'Thank you for your feedback!' });
+        setFormData(prev => ({ ...prev, about: '' }));
+      } else {
+         toast({ title: 'Error', description: 'Failed to send feedback. Please try again.', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to send feedback. Please check your connection.', variant: 'destructive' });
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -149,14 +215,32 @@ export default function Settings() {
             </div>
 
             <div>
-              <Label htmlFor="about">About</Label>
+              <div className="flex justify-between items-center mb-2">
+                <Label htmlFor="about">Feedback</Label>
+                <span className="text-xs text-muted-foreground">
+                  {3 - feedbackCount} messages remaining this month
+                </span>
+              </div>
               <Textarea
                 id="about"
                 value={formData.about}
                 onChange={(e) => setFormData({ ...formData, about: e.target.value })}
                 rows={3}
-                disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleFeedbackSubmit();
+                  }
+                }}
               />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={handleFeedbackSubmit}
+              >
+                Send Feedback
+              </Button>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

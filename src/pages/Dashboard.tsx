@@ -186,29 +186,33 @@ export default function Dashboard() {
             </Button>
           )}
 
-          <Button
-            onClick={() => navigate('/courses')}
-            variant="outline"
-            className="w-full h-auto py-4 justify-start gap-3"
-          >
-            <BookOpen className="w-5 h-5" />
-            <div className="text-left">
-              <div className="font-semibold">View All Courses</div>
-              <div className="text-xs opacity-90">Manage your semester courses</div>
-            </div>
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={() => navigate('/courses?semester=1st')}
+              variant="outline"
+              className="h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
+            >
+              <BookOpen className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+              <div className="text-left">
+                <div className="font-semibold text-primary group-hover:text-white transition-colors">First Semester</div>
+                <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">View courses</div>
+              </div>
+            </Button>
 
-          <Button
-            onClick={() => navigate('/add-course')}
-            variant="outline"
-            className="w-full h-auto py-4 justify-start gap-3"
-          >
-            <Plus className="w-5 h-5" />
-            <div className="text-left">
-              <div className="font-semibold">Add New Course</div>
-              <div className="text-xs opacity-70">Record a new course grade</div>
-            </div>
-          </Button>
+            <Button
+              onClick={() => navigate('/courses?semester=2nd')}
+              variant="outline"
+              className="h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
+            >
+              <BookOpen className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+              <div className="text-left">
+                <div className="font-semibold text-primary group-hover:text-white transition-colors">Second Semester</div>
+                <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">View courses</div>
+              </div>
+            </Button>
+          </div>
+
+
         </div>
 
         {/* Motivational Message */}

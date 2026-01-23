@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,22 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function Courses() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const semesterParam = searchParams.get('semester');
   const { user } = useAuth();
-  const { getCurrentSemesterCourses, getCurrentGPA, getCarryovers, deleteCourse, loading } = useCourses();
+  const { courses, getCurrentGPA, getCarryovers, deleteCourse, loading } = useCourses();
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const currentCourses = getCurrentSemesterCourses();
+  const currentCourses = courses.filter(course => {
+    // Filter by level (current level)
+    if (course.level !== user?.level) return false;
+    // Filter by semester if param exists
+    if (semesterParam && course.semester !== semesterParam) return false;
+    return true;
+  });
+
+  const displayTitle = semesterParam ? `${semesterParam} Semester` : 'Current Semester';
   const gpa = getCurrentGPA();
   const carryovers = getCarryovers();
 
@@ -78,7 +88,9 @@ export default function Courses() {
               </div>
             </div>
             
-            <Button onClick={() => navigate('/add-course')}>Add Course</Button>
+            <Button onClick={() => navigate(semesterParam ? `/add-course?semester=${semesterParam}` : '/add-course')}>
+              Add Course
+            </Button>
           </div>
         </div>
       </header>
@@ -87,7 +99,7 @@ export default function Courses() {
       <main className="flex-1 overflow-y-auto p-4 pb-32 space-y-6 scrollbar-hide">
         {/* Current Courses */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Current Semester</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{displayTitle}</h2>
           <div className="space-y-3">
             {currentCourses.length === 0 ? (
               <Card className="p-8 text-center">
