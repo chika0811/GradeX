@@ -8,6 +8,9 @@ export interface UserProfile {
   name: string;
   level: string;
   semester: string;
+  department?: string;
+  faculty?: string;
+  institution?: string;
   about?: string;
   isAdmin?: boolean;
 }
@@ -17,7 +20,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  signup: (name: string, email: string, password: string, level: string, semester: string, department?: string) => Promise<{ error: string | null }>;
+  signup: (name: string, email: string, password: string, institution: string, faculty: string, department: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -55,6 +58,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         name: profile.name,
         level: profile.level || '100L',
         semester: profile.semester || '1st',
+        department: profile.department || '',
+        faculty: profile.faculty || '',
+        institution: profile.institution || '',
         about: profile.about || '',
         isAdmin: !!roleData,
       });
@@ -91,7 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signup = async (name: string, email: string, password: string, level: string, semester: string, department?: string) => {
+  const signup = async (name: string, email: string, password: string, institution: string, faculty: string, department: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
     
     const { error } = await supabase.auth.signUp({
@@ -101,9 +107,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         emailRedirectTo: redirectUrl,
         data: {
           name,
-          level: level + 'L',
-          semester: semester === '1' ? '1st' : '2nd',
-          department: department || '',
+          level: '100L', // Default to 100L
+          semester: '1st', // Default to 1st
+          department,
+          faculty,
+          institution,
         },
       },
     });

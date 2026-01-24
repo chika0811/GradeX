@@ -63,6 +63,7 @@ export default function Settings() {
     about: user?.about || '',
     level: user?.level || '100L',
     semester: user?.semester || '1st',
+    profilePic: localStorage.getItem('gradex_user_passport') || '',
   });
 
   const [feedbackCount, setFeedbackCount] = useState(() => {
@@ -212,6 +213,112 @@ export default function Settings() {
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+            </div>
+
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden mb-3 border-2 border-primary/20 relative">
+                {formData.profilePic ? (
+                  <img 
+                    src={formData.profilePic} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      setFormData(prev => ({ ...prev, profilePic: '' }));
+                      toast({ title: 'Error', description: 'Failed to load image', variant: 'destructive' });
+                    }}
+                  />
+                ) : (
+                  <span className="text-xs text-muted-foreground text-center px-2">No Photo</span>
+                )}
+              </div>
+              <Label htmlFor="photo" className="cursor-pointer">
+                <div className="flex items-center gap-2 text-sm text-primary hover:underline">
+                  Upload Profile Image
+                </div>
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    if (!file.type.startsWith('image/')) {
+                      toast({ title: 'Invalid File', description: 'Please select an image file.', variant: 'destructive' });
+                      return;
+                    }
+
+                    // Use createObjectURL for better compatibility
+                    const objectUrl = URL.createObjectURL(file);
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                      try {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Max dimensions
+                        const MAX_WIDTH = 600;
+                        const MAX_HEIGHT = 600;
+                        
+                        // Maintain aspect ratio
+                        if (width > height) {
+                          if (width > MAX_WIDTH) {
+                            height = Math.round(height * (MAX_WIDTH / width));
+                            width = MAX_WIDTH;
+                          }
+                        } else {
+                          if (height > MAX_HEIGHT) {
+                            width = Math.round(width * (MAX_HEIGHT / height));
+                            height = MAX_HEIGHT;
+                          }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                           throw new Error('Could not get canvas context');
+                        }
+
+                        // Draw white background mainly for transparent PNGs converted to JPEG
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, width, height);
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Compress to JPEG with 0.8 quality
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        setFormData(prev => ({ ...prev, profilePic: compressedBase64 }));
+                        try {
+                          localStorage.setItem('gradex_user_passport', compressedBase64);
+                          toast({ title: 'Success', description: 'Profile photo updated successfully.' });
+                        } catch (err) {
+                           console.error('Storage error:', err);
+                           toast({ title: 'Warning', description: 'Image storage full. Photo will persist for this session only.', variant: 'default' });
+                        }
+                      } catch (error) {
+                        console.error('Processing error:', error);
+                        toast({ title: 'Error', description: 'Failed to process image.', variant: 'destructive' });
+                      } finally {
+                        URL.revokeObjectURL(objectUrl);
+                      }
+                    };
+                    
+                    img.onerror = () => {
+                       URL.revokeObjectURL(objectUrl);
+                       toast({ title: 'Error', description: 'Failed to load image. Please try another file.', variant: 'destructive' });
+                    };
+
+                    img.src = objectUrl;
+                  }}
+                  disabled={isLoading}
+                />
+              </Label>
             </div>
 
             <div>

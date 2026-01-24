@@ -1,30 +1,120 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Edit, Trash2, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, AlertCircle, Loader2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import ResultSlip from '@/components/ResultSlip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Helper for GPA Calc
+const calculateGradePoints = (score: number) => {
+  if (score >= 70) return 5;
+  if (score >= 60) return 4;
+  if (score >= 50) return 3;
+  if (score >= 45) return 2;
+  if (score >= 40) return 1;
+  return 0;
+};
 
 export default function Courses() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const semesterParam = searchParams.get('semester');
+  const levelParam = searchParams.get('level');
   const { user } = useAuth();
   const { courses, getCurrentGPA, getCarryovers, deleteCourse, loading } = useCourses();
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const resultSlipRef = useRef<HTMLDivElement>(null);
+
+  /* PDF Printing State */
+  const [printState, setPrintState] = useState<{ courses: typeof courses, semester: string, topLevelInfo?: string } | null>(null);
+
+  /* Effect to trigger download when printState is updated */
+  const downloadTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  const triggerPdfGeneration = async () => {
+    if (!resultSlipRef.current || !printState) return;
+    
+    setIsDownloading(true);
+    try {
+      // Small delay to ensure render
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const element = resultSlipRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Result_${printState.semester.replace(/\s/g, '_')}.pdf`);
+      
+      toast({
+        title: 'Download Complete',
+        description: 'Your result slip has been downloaded successfully.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Download Failed',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloading(false);
+      setPrintState(null);
+    }
+  };
+
+  // Watch for printState changes to trigger download
+  useEffect(() => {
+    if (printState) {
+        triggerPdfGeneration();
+    }
+  }, [printState]);
+
+  const prepareDownload = (semester: string) => {
+    const semesterCourses = currentCourses.filter(c => c.semester === semester);
+    if (semesterCourses.length === 0) {
+        toast({ title: "No Courses", description: `No courses found for ${semester} semester.`, variant: "destructive" });
+        return;
+    }
+    setPrintState({
+        courses: semesterCourses,
+        semester: `${semester} Semester`,
+        topLevelInfo: targetLevel || undefined
+    });
+  };
+
+  const targetLevel = levelParam || user?.level;
 
   const currentCourses = courses.filter(course => {
-    // Filter by level (current level)
-    if (course.level !== user?.level) return false;
+    // Filter by level
+    if (course.level !== targetLevel) return false;
     // Filter by semester if param exists
     if (semesterParam && course.semester !== semesterParam) return false;
     return true;
   });
 
-  const displayTitle = semesterParam ? `${semesterParam} Semester` : 'Current Semester';
+  const displayTitle = semesterParam ? `${semesterParam} Semester` : (levelParam ? `${levelParam} Courses` : 'Current Semester');
   const gpa = getCurrentGPA();
   const carryovers = getCarryovers();
 
@@ -75,7 +165,7 @@ export default function Courses() {
             <div>
               <h1 className="text-2xl font-bold text-foreground">My Courses</h1>
               <p className="text-sm text-muted-foreground">
-                Level {user?.level} • Semester {user?.semester}
+                Level {targetLevel} • Semester {user?.semester}
               </p>
             </div>
           </div>
@@ -88,70 +178,120 @@ export default function Courses() {
               </div>
             </div>
             
-            <Button onClick={() => navigate(semesterParam ? `/add-course?semester=${semesterParam}` : '/add-course')}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isDownloading}>
+                  {isDownloading ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  Download
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => prepareDownload('1st')}>
+                  Download 1st Semester
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => prepareDownload('2nd')}>
+                  Download 2nd Semester
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button onClick={() => {
+              const params = new URLSearchParams();
+              if (semesterParam) params.set('semester', semesterParam);
+              if (targetLevel) params.set('level', targetLevel);
+              navigate(`/add-course?${params.toString()}`);
+            }}>
               Add Course
             </Button>
           </div>
         </div>
       </header>
 
+      {/* Hidden Result Slip for PDF Generation */}
+      <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
+        <div ref={resultSlipRef}>
+           {printState && (
+             <ResultSlip 
+                user={user} 
+                courses={printState.courses} 
+                semesterParam={printState.semester}
+                levelParam={printState.topLevelInfo || null}
+                gpa={printState.courses.length > 0 ? (printState.courses.reduce((acc, c) => acc + (calculateGradePoints(c.score) * c.units), 0) / printState.courses.reduce((acc, c) => acc + c.units, 0)) : 0.0}
+             />
+           )}
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 pb-32 space-y-6 scrollbar-hide">
         {/* Current Courses */}
+        {/* Grouped Courses */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">{displayTitle}</h2>
-          <div className="space-y-3">
-            {currentCourses.length === 0 ? (
+          {['1st', '2nd'].map(semester => {
+             const semesterCourses = currentCourses.filter(c => c.semester === semester);
+             if (semesterCourses.length === 0) return null;
+
+             return (
+               <div key={semester} className="mb-8">
+                 <h2 className="text-lg font-semibold text-foreground mb-3">{semester} Semester</h2>
+                 <div className="space-y-3">
+                   {semesterCourses.map((course) => (
+                    <Card key={course.id} className="p-4 hover:shadow-elevated transition-shadow">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-mono text-sm font-semibold text-primary">
+                              {course.code}
+                            </span>
+                            <span className={`text-2xl font-bold ${getGradeColor(course.grade)}`}>
+                              {course.grade}
+                            </span>
+                          </div>
+                          <h3 className="font-medium text-foreground mb-2">{course.title}</h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>{course.units} Units</span>
+                            <span>Score: {course.score}/100</span>
+                            <span>{course.grade === 'F' ? 'Carryover' : 'Passed'}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/edit-course/${course.id}`)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(course.id, course.code)}
+                            disabled={deletingId === course.id}
+                          >
+                            {deletingId === course.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                   ))}
+                 </div>
+               </div>
+             );
+           })}
+           
+           {currentCourses.length === 0 && (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground mb-4">No courses added yet</p>
                 <Button onClick={() => navigate('/add-course')}>Add Your First Course</Button>
               </Card>
-            ) : (
-              currentCourses.map((course) => (
-                <Card key={course.id} className="p-4 hover:shadow-elevated transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-sm font-semibold text-primary">
-                          {course.code}
-                        </span>
-                        <span className={`text-2xl font-bold ${getGradeColor(course.grade)}`}>
-                          {course.grade}
-                        </span>
-                      </div>
-                      <h3 className="font-medium text-foreground mb-2">{course.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{course.units} Units</span>
-                        <span>Score: {course.score}/100</span>
-                        <span>{course.grade === 'F' ? 'Carryover' : 'Passed'}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/edit-course/${course.id}`)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(course.id, course.code)}
-                        disabled={deletingId === course.id}
-                      >
-                        {deletingId === course.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
+           )}
         </div>
 
         {/* Carryovers */}

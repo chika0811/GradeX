@@ -28,6 +28,7 @@ export default function AddCourse() {
     units: existingCourse?.units || 3,
     score: existingCourse?.score || 0,
     semester: existingCourse?.semester || searchParams.get('semester') || '1st',
+    level: existingCourse?.level || searchParams.get('level') || user?.level || '100L',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,14 +55,25 @@ export default function AddCourse() {
         await addCourse({
           ...formData,
           title: formData.title || formData.code, // Default title to code if empty
-          level: user?.level || '100L',
+          level: formData.level,
         });
         toast({
           title: 'Course Added',
           description: `${formData.code} has been added to your records.`,
         });
+        // Reset form for next entry but keep context (Level, Semester, Session)
+        setFormData(prev => ({ 
+          ...prev, 
+          code: '', 
+          title: '', 
+          units: 3, 
+          score: 0 
+        }));
       }
-      navigate('/courses');
+      
+      if (isEdit) {
+        navigate('/courses');
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -157,6 +169,46 @@ export default function AddCourse() {
                 <option value="E">E</option>
                 <option value="F">F</option>
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+
+
+              {!searchParams.get('level') && (
+              <div>
+                <Label htmlFor="level">Level *</Label>
+                <select
+                  id="level"
+                  required
+                  disabled={isLoading}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.level}
+                  onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                >
+                  <option value="100L">100 Level</option>
+                  <option value="200L">200 Level</option>
+                  <option value="300L">300 Level</option>
+                  <option value="400L">400 Level</option>
+                  <option value="500L">500 Level</option>
+                  <option value="600L">600 Level</option>
+                </select>
+              </div>
+              )}
+
+              <div>
+                <Label htmlFor="semester">Semester *</Label>
+                <select
+                  id="semester"
+                  required
+                  disabled={isLoading}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.semester}
+                  onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                >
+                  <option value="1st">1st Semester</option>
+                  <option value="2nd">2nd Semester</option>
+                </select>
+              </div>
             </div>
 
 

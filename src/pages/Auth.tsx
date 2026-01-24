@@ -19,9 +19,9 @@ export default function Auth() {
     email: '',
     password: '',
     confirmPassword: '',
+    institution: '',
+    faculty: '',
     department: '',
-    currentLevel: '100',
-    currentSemester: '1',
   });
 
   const { login, signup, session, loading } = useAuth();
@@ -71,8 +71,8 @@ export default function Auth() {
           formData.name, 
           formData.email, 
           formData.password, 
-          formData.currentLevel,
-          formData.currentSemester,
+          formData.institution,
+          formData.faculty,
           formData.department
         );
         
@@ -185,63 +185,44 @@ export default function Auth() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="department" className="flex items-center gap-2">
-                  <Building className="w-4 h-4 text-primary" />
-                  Department
-                </Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="e.g., Computer Science"
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="level" className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-primary" />
-                    Level *
+                  <Label htmlFor="institution">
+                    Institution
                   </Label>
-                  <Select 
-                    value={formData.currentLevel} 
-                    onValueChange={(value) => setFormData({ ...formData, currentLevel: value })}
+                  <Input
+                    id="institution"
+                    value={formData.institution}
+                    onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                    placeholder="e.g., University of Lagos"
                     disabled={isLoading}
-                  >
-                    <SelectTrigger id="level">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="100">100 Level</SelectItem>
-                      <SelectItem value="200">200 Level</SelectItem>
-                      <SelectItem value="300">300 Level</SelectItem>
-                      <SelectItem value="400">400 Level</SelectItem>
-                      <SelectItem value="500">500 Level</SelectItem>
-                      <SelectItem value="600">600 Level</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 <div>
-                  <Label htmlFor="semester" className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    Semester *
+                  <Label htmlFor="faculty">
+                    Faculty
                   </Label>
-                  <Select 
-                    value={formData.currentSemester} 
-                    onValueChange={(value) => setFormData({ ...formData, currentSemester: value })}
+                  <Input
+                    id="faculty"
+                    value={formData.faculty}
+                    onChange={(e) => setFormData({ ...formData, faculty: e.target.value })}
+                    placeholder="e.g., Science"
                     disabled={isLoading}
-                  >
-                    <SelectTrigger id="semester">
-                      <SelectValue placeholder="Select semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1st Semester</SelectItem>
-                      <SelectItem value="2">2nd Semester</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="department">
+                    Department
+                  </Label>
+                  <Input
+                    id="department"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    placeholder="e.g., Computer Science"
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
             </>

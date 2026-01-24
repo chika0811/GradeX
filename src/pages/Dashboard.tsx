@@ -186,33 +186,34 @@ export default function Dashboard() {
             </Button>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              onClick={() => navigate('/courses?semester=1st')}
-              variant="outline"
-              className="h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
-            >
-              <BookOpen className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
-              <div className="text-left">
-                <div className="font-semibold text-primary group-hover:text-white transition-colors">First Semester</div>
-                <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">View courses</div>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => navigate('/courses?semester=2nd')}
-              variant="outline"
-              className="h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
-            >
-              <BookOpen className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
-              <div className="text-left">
-                <div className="font-semibold text-primary group-hover:text-white transition-colors">Second Semester</div>
-                <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">View courses</div>
-              </div>
-            </Button>
+          <div className="grid grid-cols-1 gap-3">
+            {Array.from(new Set(courses.map(c => c.level))).sort().map((level) => (
+              <Button
+                key={level}
+                onClick={() => navigate(`/courses?level=${level}`)}
+                variant="outline"
+                className="h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
+              >
+                <BookOpen className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+                <div className="text-left">
+                  <div className="font-semibold text-primary group-hover:text-white transition-colors">{level} Results</div>
+                  <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">View {level} courses</div>
+                </div>
+              </Button>
+            ))}
           </div>
 
-
+          <Button
+            onClick={() => navigate('/add-course')}
+            variant="outline"
+            className="w-full h-auto py-4 justify-start gap-3 border-primary/20 bg-primary/5 hover:bg-primary group transition-all duration-300"
+          >
+            <Plus className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+            <div className="text-left">
+              <div className="font-semibold text-primary group-hover:text-white transition-colors">Add New Course</div>
+              <div className="text-xs opacity-70 group-hover:text-white/80 transition-colors">Record a new course grade</div>
+            </div>
+          </Button>
         </div>
 
         {/* Motivational Message */}
