@@ -550,7 +550,7 @@ export default function Courses() {
                            <h3 className="font-medium text-foreground mb-2">{course.title}</h3>
                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
                              <span>{course.units} Units</span>
-                             <span>Score: {course.score}/100</span>
+
                              <span>{course.grade === 'F' ? 'Carryover' : 'Passed'}</span>
                            </div>
                          </div>
@@ -660,7 +660,7 @@ export default function Courses() {
                       <h3 className="font-medium text-foreground mb-2">{course.title}</h3>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{course.units} Units</span>
-                        <span>Score: {course.score}/100</span>
+
                         <span className="text-destructive">Needs Retake</span>
                       </div>
                     </div>
