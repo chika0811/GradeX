@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ import {
   Loader2,
   TrendingUp,
   ArrowLeft,
+  MessageSquare,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -77,7 +78,7 @@ export default function AdminDashboard() {
     fetchData();
   }, [user, navigate]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
@@ -135,7 +136,22 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    // Check if user is admin
+    if (!user?.isAdmin) {
+      toast({
+        title: 'Access Denied',
+        description: 'You do not have permission to access this page.',
+        variant: 'destructive',
+      });
+      navigate('/dashboard');
+      return;
+    }
+
+    fetchData();
+  }, [user, navigate, fetchData, toast]);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -288,6 +304,13 @@ export default function AdminDashboard() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={() => navigate('/admin/feedback')}>
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Check Feedback
+          </Button>
         </div>
 
         {/* Signup Chart */}

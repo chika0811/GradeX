@@ -18,6 +18,8 @@ import { ChatWidget } from "@/components/ChatWidget";
 import Settings from "./pages/Settings";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminFeedback from "./pages/AdminFeedback";
+import AdminFeedbackDetails from "./pages/AdminFeedbackDetails";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -90,6 +92,8 @@ function AppRoutes() {
       <Route path="/legal/:page" element={<Legal />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
+      <Route path="/admin/feedback/:id" element={<AdminRoute><AdminFeedbackDetails /></AdminRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

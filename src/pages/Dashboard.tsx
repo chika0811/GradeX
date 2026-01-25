@@ -133,7 +133,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <h2 className="text-xl font-semibold mb-1">Cumulative CGPA</h2>
+            <h2 className="text-xl font-semibold mb-1">CGPA</h2>
             <p className="text-sm opacity-90">Keep pushing for excellence!</p>
           </div>
         </Card>
