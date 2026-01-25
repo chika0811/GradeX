@@ -1,7 +1,7 @@
 
 import React, { forwardRef } from 'react';
 import { UserProfile } from '@/contexts/AuthContext';
-import { Course } from '@/contexts/CourseContext';
+import { Course } from '@/lib/grading';
 import { calculateGrade } from '@/lib/grading';
 import { Building } from 'lucide-react';
 
