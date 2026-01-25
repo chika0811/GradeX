@@ -551,7 +551,7 @@ export default function Courses() {
                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
                              <span>{course.units} Units</span>
 
-                             <span>{course.grade === 'F' ? 'Carryover' : 'Passed'}</span>
+                             {course.grade === 'F' && <span className="text-destructive">Carryover</span>}
                            </div>
                          </div>
                          <div className="flex gap-2">
