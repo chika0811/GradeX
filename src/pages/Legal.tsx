@@ -170,9 +170,8 @@ export default function Legal() {
       {/* Footer */}
       <footer className="fixed bottom-4 left-0 right-0 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border shadow-sm">
-          <span className="text-xs text-muted-foreground">Powered by</span>
           <span className="text-sm font-bold bg-gradient-primary bg-clip-text text-transparent">
-            NoskyTech
+            Dnovit / NoskyTech
           </span>
         </div>
       </footer>

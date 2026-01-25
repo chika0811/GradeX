@@ -29,6 +29,7 @@ export default function AddCourse() {
     score: existingCourse?.score || 0,
     semester: existingCourse?.semester || searchParams.get('semester') || '1st',
     level: existingCourse?.level || searchParams.get('level') || user?.level || '100L',
+    session: localStorage.getItem('gradex_current_session') || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,6 +220,12 @@ export default function AddCourse() {
                 id="session"
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isLoading}
+                value={formData.session}
+                onChange={(e) => {
+                  const newSession = e.target.value;
+                  setFormData({ ...formData, session: newSession });
+                  localStorage.setItem('gradex_current_session', newSession);
+                }}
               >
                 <option value="">Select Academic Session</option>
                 {Array.from({ length: 12 }, (_, i) => {
@@ -279,7 +286,7 @@ export default function AddCourse() {
 
       {/* Footer */}
       <footer className="fixed bottom-4 left-0 right-0 text-center">
-        <p className="text-xs text-muted-foreground">Powered by NoskyTech</p>
+        <p className="text-xs text-muted-foreground">Dnovit / NoskyTech</p>
       </footer>
     </div>
   );

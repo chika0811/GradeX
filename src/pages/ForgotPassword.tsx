@@ -132,7 +132,7 @@ export default function ForgotPassword() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-border text-center text-xs text-muted-foreground">
-          Powered by NoskyTech
+          Dnovit / NoskyTech
         </div>
       </Card>
     </div>

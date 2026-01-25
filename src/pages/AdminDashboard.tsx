@@ -450,9 +450,8 @@ export default function AdminDashboard() {
       {/* Footer */}
       <footer className="py-6 text-center border-t border-border mt-8">
         <div className="inline-flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Powered by</span>
           <span className="text-sm font-bold bg-gradient-primary bg-clip-text text-transparent">
-            NoskyTech
+            Dnovit / NoskyTech
           </span>
         </div>
       </footer>

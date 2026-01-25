@@ -98,11 +98,7 @@ const ResultSlip = forwardRef<HTMLDivElement, ResultSlipProps>(({ user, courses,
             <thead>
                 <tr className="border-b border-gray-200 text-gray-500">
                     <th className="py-2">Course Code</th>
-                    <th className="py-2">Course Title</th>
                     <th className="py-2">Course Unit</th>
-                    <th className="py-2">Test Score</th>
-                    <th className="py-2">Exam Score</th>
-                    <th className="py-2">Total</th>
                     <th className="py-2">Grade</th>
                 </tr>
             </thead>
@@ -110,11 +106,7 @@ const ResultSlip = forwardRef<HTMLDivElement, ResultSlipProps>(({ user, courses,
                 {courses.map((course) => (
                     <tr key={course.id} className="border-b border-gray-100">
                         <td className="py-3 font-medium text-gray-700 uppercase">{course.code}</td>
-                        <td className="py-3 text-gray-600 uppercase text-xs max-w-[200px]">{course.title}</td>
                         <td className="py-3 text-gray-600">{course.units}</td>
-                        <td className="py-3 text-gray-600">-</td>
-                        <td className="py-3 text-gray-600">-</td>
-                        <td className="py-3 text-gray-600">{course.score}</td>
                         <td className="py-3 font-bold text-gray-700">{course.grade}</td>
                     </tr>
                 ))}
