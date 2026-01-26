@@ -72,10 +72,10 @@ export function calculateGPA(courses: Course[]): number {
   if (courses.length === 0) return 0;
   
   const totalPoints = courses.reduce((sum, course) => {
-    return sum + (getGradePoints(course.grade) * course.units);
+    return sum + (getGradePoints(course.grade) * Number(course.units));
   }, 0);
   
-  const totalUnits = courses.reduce((sum, course) => sum + course.units, 0);
+  const totalUnits = courses.reduce((sum, course) => sum + Number(course.units), 0);
   
   return totalUnits > 0 ? totalPoints / totalUnits : 0;
 }

@@ -21,7 +21,7 @@ const ResultSlip = forwardRef<HTMLDivElement, ResultSlipProps>(({ user, courses,
   const passportImage = localStorage.getItem('gradex_user_passport');
 
   return (
-    <div ref={ref} className="p-10 bg-white text-black font-sans min-w-[800px]">
+    <div ref={ref} className="p-10 bg-white text-black fon6t-sans min-w-[800px]">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>

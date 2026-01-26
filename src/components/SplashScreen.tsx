@@ -58,8 +58,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
       {/* Footer */}
       <div className="absolute bottom-8 text-center">
-        <p className="text-white/60 text-sm">Powered by</p>
-        <p className="text-white font-semibold text-lg">NoskyTech</p>
+        <p className="text-white font-semibold text-lg">Dnovit / NoskyTech</p>
       </div>
     </div>
   );
