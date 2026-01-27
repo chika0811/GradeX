@@ -46,15 +46,18 @@ export default function AddCourse() {
 
     setIsLoading(true);
     try {
+      // Exclude session from the data sent to the backend
+      const { session, ...courseData } = formData;
+
       if (isEdit && id) {
-        await updateCourse(id, formData);
+        await updateCourse(id, courseData);
         toast({
           title: 'Course Updated',
           description: `${formData.code} has been updated successfully.`,
         });
       } else {
         await addCourse({
-          ...formData,
+          ...courseData,
           title: formData.title || formData.code, // Default title to code if empty
           level: formData.level,
         });
