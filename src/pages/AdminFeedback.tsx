@@ -117,24 +117,23 @@ export default function AdminFeedback() {
     }
   };
 
-  const handleMarkAsRead = async (id: string, currentStatus: string) => {
+  const handleMarkAsRead = async (id: string) => {
     try {
-      const newStatus = currentStatus === 'read' ? 'unread' : 'read';
       // @ts-expect-error - Table not in types
       const { error } = await supabase
         .from('feedback')
-        .update({ status: newStatus })
+        .update({ status: 'read' })
         .eq('id', id);
 
       if (error) throw error;
 
       setFeedback(prev => 
-        prev.map(f => f.id === id ? { ...f, status: newStatus } : f)
+        prev.map(f => f.id === id ? { ...f, status: 'read' } : f)
       );
       
       toast({
         title: 'Updated',
-        description: `Marked as ${newStatus}`,
+        description: 'Marked as read',
       });
     } catch (error) {
       toast({
@@ -230,104 +229,191 @@ export default function AdminFeedback() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {feedback.map((item) => (
-                        <TableRow 
-                          key={item.id} 
-                          className={`cursor-pointer transition-colors hover:bg-muted/50 ${item.status === 'unread' ? 'bg-muted/30' : ''}`}
-                          onClick={() => navigate(`/admin/feedback/${item.id}`)}
-                        >
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium flex items-center gap-2">
-                                <User className="w-3 h-3 text-muted-foreground" />
-                                {item.profiles?.name || 'Unknown User'}
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {feedback.map((item) => (
+                          <TableRow 
+                            key={item.id} 
+                            className={`cursor-pointer transition-colors hover:bg-muted/50 ${item.status === 'unread' ? 'bg-muted/30' : ''}`}
+                            onClick={() => navigate(`/admin/feedback/${item.id}`)}
+                          >
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-medium flex items-center gap-2">
+                                  <User className="w-3 h-3 text-muted-foreground" />
+                                  {item.profiles?.name || 'Unknown User'}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-5">
+                                  {item.profiles?.email}
+                                </span>
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock className="w-3 h-3" />
+                                {format(new Date(item.created_at), 'MMM d, yyyy h:mm a')}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
+                                item.status === 'unread' 
+                                  ? 'bg-primary/10 text-primary border-primary/20' 
+                                  : 'bg-muted text-muted-foreground border-border'
+                              }`}>
+                                {item.status.toUpperCase()}
                               </span>
-                              <span className="text-xs text-muted-foreground ml-5">
-                                {item.profiles?.email}
-                              </span>
-                            </div>
-                          </TableCell>
-                          
-                          <TableCell>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="w-3 h-3" />
-                              {format(new Date(item.created_at), 'MMM d, yyyy h:mm a')}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
-                              item.status === 'unread' 
-                                ? 'bg-primary/10 text-primary border-primary/20' 
-                                : 'bg-muted text-muted-foreground border-border'
-                            }`}>
-                              {item.status.toUpperCase()}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => e.stopPropagation()}
+                                      title="Delete"
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Feedback?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this feedback message? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDelete(item.id);
+                                        }}
+                                        className="bg-destructive hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                                {!item.status || item.status === 'unread' ? (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={(e) => e.stopPropagation()}
-                                    title="Delete"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleMarkAsRead(item.id);
+                                    }}
+                                    title="Mark as Read"
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <CheckCircle className="w-4 h-4 text-primary" />
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Feedback?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete this feedback message? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDelete(item.id);
-                                      }}
-                                      className="bg-destructive hover:bg-destructive/90"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 handleMarkAsRead(item.id, item.status);
-                               }}
-                               title={item.status === 'read' ? 'Mark as Unread' : 'Mark as Read'}
-                             >
-                               {item.status === 'read' ? (
-                                 <XCircle className="w-4 h-4 text-muted-foreground" />
-                               ) : (
-                                 <CheckCircle className="w-4 h-4 text-primary" />
-                               )}
-                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                                ) : null}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="space-y-4 md:hidden">
+                    {feedback.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`p-4 rounded-lg border bg-card text-card-foreground shadow-sm transition-colors cursor-pointer active:scale-[0.98] ${
+                          item.status === 'unread' ? 'bg-muted/30 border-l-4 border-l-primary' : ''
+                        }`}
+                        onClick={() => navigate(`/admin/feedback/${item.id}`)}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                               <User className="h-4 w-4 text-primary" />
+                             </div>
+                             <div>
+                               <p className="font-medium text-sm">{item.profiles?.name || 'Unknown'}</p>
+                               <p className="text-xs text-muted-foreground">{item.profiles?.email}</p>
+                             </div>
+                          </div>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                            item.status === 'unread' 
+                              ? 'bg-primary/5 text-primary border-primary/20' 
+                              : 'bg-muted text-muted-foreground border-border'
+                          }`}>
+                            {item.status.toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 pl-1">
+                          <Clock className="w-3 h-3" />
+                          {format(new Date(item.created_at), 'MMM d, yyyy h:mm a')}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-border/50">
+                           {!item.status || item.status === 'unread' ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs font-normal"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMarkAsRead(item.id);
+                                }}
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1 text-primary" />
+                                Mark Read
+                              </Button>
+                            ) : null}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Feedback?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this feedback message?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(item.id);
+                                    }}
+                                    className="bg-destructive hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

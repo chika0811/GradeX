@@ -66,11 +66,21 @@ export default function AdminFeedbackDetails() {
           .single();
           
         if (feedbackData.status === 'unread') {
-            await supabase
+            const { error: updateError } = await supabase
               .from('feedback')
               .update({ status: 'read' })
               .eq('id', feedbackId);
-            feedbackData.status = 'read';
+            
+            if (updateError) {
+                console.error('Error updating status:', updateError);
+                toast({
+                    title: 'Warning',
+                    description: 'Failed to mark feedback as read. Check permissions.',
+                    variant: 'destructive',
+                });
+            } else {
+                feedbackData.status = 'read';
+            }
         }
 
         if (!profileError && profile) {
@@ -151,7 +161,7 @@ export default function AdminFeedbackDetails() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <h3 className="font-semibold text-lg">{feedback.profiles?.name || 'Unknown User'}</h3>
                             <div className="flex items-center gap-2 text-muted-foreground">
@@ -159,9 +169,9 @@ export default function AdminFeedbackDetails() {
                                 <span>{feedback.profiles?.email}</span>
                             </div>
                         </div>
-                        <div className="text-right text-sm text-muted-foreground">
-                            <p>{feedback.profiles?.level || 'N/A'}</p>
-                            <p>{feedback.profiles?.semester || 'N/A'}</p>
+                        <div className="text-left md:text-right text-sm text-muted-foreground bg-muted/30 p-2 rounded md:bg-transparent md:p-0">
+                            <p>Level: {feedback.profiles?.level || 'N/A'}</p>
+                            <p>Semester: {feedback.profiles?.semester || 'N/A'}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -176,7 +186,7 @@ export default function AdminFeedbackDetails() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="bg-muted/30 p-6 rounded-lg whitespace-pre-wrap text-foreground leading-relaxed">
+                    <div className="bg-muted/30 p-4 md:p-6 rounded-lg whitespace-pre-wrap text-foreground leading-relaxed">
                         {feedback.message}
                     </div>
                 </CardContent>

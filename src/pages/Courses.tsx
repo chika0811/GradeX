@@ -357,7 +357,7 @@ export default function Courses() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-6">
               <div>
                 <div className="text-3xl font-bold text-primary">{gpa.toFixed(2)}</div>
@@ -365,34 +365,39 @@ export default function Courses() {
               </div>
             </div>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={isDownloading}>
-                  {isDownloading ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <Download className="w-4 h-4 mr-2" />
-                  )}
-                  Download
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => prepareDownload('1st')}>
-                  Download 1st Semester
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => prepareDownload('2nd')}>
-                  Download 2nd Semester
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button onClick={() => {
-              const params = new URLSearchParams();
-              if (semesterParam) params.set('semester', semesterParam);
-              if (targetLevel) params.set('level', targetLevel);
-              navigate(`/add-course?${params.toString()}`);
-            }}>
-              Add Course
-            </Button>
+            <div className="flex items-center gap-2 self-end md:self-auto w-full md:w-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={isDownloading} className="flex-1 md:flex-none">
+                    {isDownloading ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Download
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => prepareDownload('1st')}>
+                    Download 1st Semester
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => prepareDownload('2nd')}>
+                    Download 2nd Semester
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button 
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (semesterParam) params.set('semester', semesterParam);
+                  if (targetLevel) params.set('level', targetLevel);
+                  navigate(`/add-course?${params.toString()}`);
+                }}
+                className="flex-1 md:flex-none"
+              >
+                Add Course
+              </Button>
+            </div>
           </div>
         </div>
       </header>
