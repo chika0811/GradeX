@@ -43,7 +43,7 @@ export default function Dashboard() {
 
   const currentCourses = getCurrentSemesterCourses();
   const cgpa = getCGPA();
-  const carryovers = getCarryovers();
+  const carryovers = courses.filter(c => c.score < 40);
 
   if (loading) {
     return (
@@ -151,8 +151,8 @@ export default function Dashboard() {
                 <BookOpen className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">{currentCourses.length}</div>
-                <div className="text-sm text-muted-foreground">Current Courses</div>
+                <div className="text-2xl font-bold text-foreground">{courses.length}</div>
+                <div className="text-sm text-muted-foreground">Total Courses</div>
               </div>
             </div>
           </Card>
