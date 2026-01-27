@@ -13,6 +13,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Loader2,
   ArrowLeft,
   MessageSquare,
@@ -20,6 +31,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Trash2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -133,6 +145,40 @@ export default function AdminFeedback() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      // @ts-expect-error - Table not in types
+      const { data, error } = await supabase
+        .from('feedback')
+        .delete()
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+
+      // Check if any row was actually deleted
+      if (!data || data.length === 0) {
+        throw new Error('Deletion failed. You might not have permission.');
+      }
+
+      setFeedback(prev => prev.filter(f => f.id !== id));
+      
+      toast({
+        title: 'Deleted',
+        description: 'Feedback message deleted',
+      });
+    } catch (error: any) {
+      console.error("Delete error:", error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete feedback',
+        variant: 'destructive',
+      });
+      // Refresh list to ensure UI matches DB state
+      fetchFeedback();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -229,6 +275,39 @@ export default function AdminFeedback() {
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Delete"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Feedback?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this feedback message? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(item.id);
+                                      }}
+                                      className="bg-destructive hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                              <Button
                                variant="ghost"
                                size="sm"
