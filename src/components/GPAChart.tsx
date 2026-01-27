@@ -119,7 +119,7 @@ const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsZoomed(!isZoomed)}
-                className="h-8 text-xs bg-transparent border-primary/20 hover:bg-primary/5"
+                className="h-8 text-xs bg-transparent border-primary/20 hover:bg-primary hover:text-primary-foreground"
             >
                 {isZoomed ? 'Reset Zoom' : 'Auto Scale'}
             </Button>
