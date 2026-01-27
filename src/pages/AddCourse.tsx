@@ -98,7 +98,7 @@ export default function AddCourse() {
       <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -199,6 +199,7 @@ export default function AddCourse() {
               </div>
               )}
 
+              {!searchParams.get('semester') && (
               <div>
                 <Label htmlFor="semester">Semester *</Label>
                 <select
@@ -213,6 +214,7 @@ export default function AddCourse() {
                   <option value="2nd">2nd Semester</option>
                 </select>
               </div>
+              )}
             </div>
 
 
@@ -276,7 +278,7 @@ export default function AddCourse() {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(-1)}
                 disabled={isLoading}
               >
                 Cancel

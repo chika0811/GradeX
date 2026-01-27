@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Edit, Trash2, AlertCircle, Loader2, Download, Upload, FileText, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, AlertCircle, Loader2, Download, Upload, FileText, Image as ImageIcon, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { calculateGPA } from "@/lib/grading";
 
 // Helper for GPA Calc
 const calculateGradePoints = (score: number) => {
@@ -296,11 +297,11 @@ export default function Courses() {
     // Filter by semester if param exists
     if (semesterParam && course.semester !== semesterParam) return false;
     return true;
-  });
+  }).sort((a, b) => a.code.localeCompare(b.code));
 
   const displayTitle = semesterParam ? `${semesterParam} Semester` : (levelParam ? `${levelParam} Courses` : 'Current Semester');
-  const gpa = getCurrentGPA();
-  const carryovers = getCarryovers();
+  const gpa = calculateGPA(currentCourses);
+  const carryovers = getCarryovers().sort((a, b) => a.code.localeCompare(b.code));
 
   const handleBackToDashboard = () => navigate('/dashboard');
 
@@ -351,7 +352,7 @@ export default function Courses() {
             <div>
               <h1 className="text-2xl font-bold text-foreground">My Courses</h1>
               <p className="text-sm text-muted-foreground">
-                Level {targetLevel} • Semester {user?.semester}
+                Level {targetLevel}
               </p>
             </div>
           </div>
@@ -360,7 +361,7 @@ export default function Courses() {
             <div className="flex items-center gap-6">
               <div>
                 <div className="text-3xl font-bold text-primary">{gpa.toFixed(2)}</div>
-                <div className="text-xs text-muted-foreground">Semester GPA</div>
+                <div className="text-xs text-muted-foreground">{semesterParam ? 'Semester GPA' : 'Level GPA'}</div>
               </div>
             </div>
             
@@ -515,23 +516,47 @@ export default function Courses() {
               // Show if courses exist OR if there's an uploaded result
               if (semesterCourses.length === 0 && !semesterResult) return null;
 
+              const semesterGPA = calculateGPA(semesterCourses);
+
               return (
                 <div key={semester} className="mb-8">
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-foreground">{semester} Semester</h2>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => triggerUpload(semester)}
-                      disabled={isUploading}
-                    >
-                      {isUploading && uploadSemester === semester ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : (
-                        <Upload className="w-4 h-4 mr-2" />
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="text-lg font-semibold text-foreground">{semester} Semester</h2>
+                      {semesterCourses.length > 0 && (
+                         <span className="text-sm font-medium text-muted-foreground">
+                           - {semesterGPA.toFixed(2)} GPA
+                         </span>
                       )}
-                      Upload Result
-                    </Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          const params = new URLSearchParams();
+                          params.set('semester', semester);
+                          if (targetLevel) params.set('level', targetLevel);
+                          navigate(`/add-course?${params.toString()}`);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Course
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => triggerUpload(semester)}
+                        disabled={isUploading}
+                      >
+                        {isUploading && uploadSemester === semester ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-2" />
+                        )}
+                        Upload Result
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="space-y-3">
@@ -644,7 +669,7 @@ export default function Courses() {
               <h2 className="text-lg font-semibold text-foreground">Carry-over Courses</h2>
             </div>
             <div className="space-y-3">
-              {carryovers.map((course) => (
+              {carryovers.sort((a, b) => a.code.localeCompare(b.code)).map((course) => (
                 <Card
                   key={course.id}
                   className="p-4 border-destructive/30 bg-destructive/5"

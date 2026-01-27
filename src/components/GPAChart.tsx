@@ -1,6 +1,7 @@
-import { useMemo, memo } from 'react';
+import { useMemo, memo, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface Course {
@@ -78,6 +79,8 @@ const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
     return data;
   }, [courses]);
 
+  const [isZoomed, setIsZoomed] = useState(false);
+
   const trend = useMemo(() => {
     if (chartData.length < 2) return 'neutral';
     const lastTwo = chartData.slice(-2);
@@ -85,6 +88,15 @@ const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
     if (lastTwo[1].gpa < lastTwo[0].gpa) return 'down';
     return 'neutral';
   }, [chartData]);
+
+  // Calculate dynamic domain for zoom with padding
+  const yDomain = useMemo(() => {
+    if (!isZoomed || chartData.length === 0) return [0, 5];
+    const gpas = chartData.map(d => d.gpa);
+    const min = Math.min(...gpas);
+    const max = Math.max(...gpas);
+    return [Math.max(0, min - 0.2), Math.min(5, max + 0.2)];
+  }, [isZoomed, chartData]);
 
   if (chartData.length === 0) {
     return null;
@@ -102,9 +114,19 @@ const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
             <TrendingUp className="w-5 h-5 text-primary" />
             GPA Performance
           </CardTitle>
-          <div className={`flex items-center gap-1 text-sm ${trendColor}`}>
-            <TrendIcon className="w-4 h-4" />
-            <span>{trendText}</span>
+          <div className="flex items-center gap-4">
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsZoomed(!isZoomed)}
+                className="h-8 text-xs bg-transparent border-primary/20 hover:bg-primary/5"
+            >
+                {isZoomed ? 'Reset Zoom' : 'Auto Scale'}
+            </Button>
+            <div className={`flex items-center gap-1 text-sm ${trendColor}`}>
+                <TrendIcon className="w-4 h-4" />
+                <span>{trendText}</span>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -119,8 +141,8 @@ const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
-                domain={[0, 5]}
-                ticks={[0, 1, 2, 3, 4, 5]}
+                domain={yDomain}
+                tickCount={6}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
@@ -142,7 +164,8 @@ const GPAChart = memo(function GPAChart({ courses }: GPAChartProps) {
                 stroke="hsl(var(--success))" 
                 strokeDasharray="5 5" 
                 label={{ 
-                  value: 'First Class', 
+                  // Only show label if it's within sensible view range (simple check)
+                  value: isZoomed && yDomain[0] > 4.5 ? '' : 'First Class', 
                   position: 'right',
                   fill: 'hsl(var(--success))',
                   fontSize: 10
