@@ -105,7 +105,9 @@ export function ChatWidget() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Chat API Error:", response.status, errorData);
+        throw new Error(errorData.error || `Failed to get response (${response.status})`);
       }
 
       const reader = response.body?.getReader();
@@ -148,11 +150,12 @@ export function ChatWidget() {
         }
       }, 20);
 
-    } catch (error) {
+    } catch (error: any) {
       setIsLoading(false);
+      console.error(error);
       toast({
         title: 'Error',
-        description: 'Failed to get AI response',
+        description: error.message || 'Failed to get AI response',
         variant: 'destructive',
       });
       setMessages(prev => prev.map(m => 
