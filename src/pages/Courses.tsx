@@ -525,7 +525,7 @@ export default function Courses() {
 
               return (
                 <div key={semester} className="mb-8">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div className="flex items-baseline gap-2">
                       <h2 className="text-lg font-semibold text-foreground">{semester} Semester</h2>
                       {semesterCourses.length > 0 && (
@@ -534,10 +534,11 @@ export default function Courses() {
                          </span>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
                       <Button
                         variant="secondary"
                         size="sm"
+                        className="w-full sm:w-auto text-xs sm:text-sm h-9"
                         onClick={() => {
                           const params = new URLSearchParams();
                           params.set('semester', semester);
@@ -545,19 +546,20 @@ export default function Courses() {
                           navigate(`/add-course?${params.toString()}`);
                         }}
                       >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Plus className="w-3.5 h-3.5 mr-1.5" />
                         Add Course
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
+                        className="w-full sm:w-auto text-xs sm:text-sm h-9"
                         onClick={() => triggerUpload(semester)}
                         disabled={isUploading}
                       >
                         {isUploading && uploadSemester === semester ? (
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
                         ) : (
-                          <Upload className="w-4 h-4 mr-2" />
+                          <Upload className="w-3.5 h-3.5 mr-1.5" />
                         )}
                         Upload Result
                       </Button>

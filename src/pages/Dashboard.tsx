@@ -56,15 +56,16 @@ export default function Dashboard() {
   return (
     <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Header */}
+      {/* Header */}
       <header className="flex-none bg-card border-b border-border pt-[env(safe-area-inset-top)] z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Welcome, {user?.name}</h1>
             <p className="text-sm text-muted-foreground">
               Level {user?.level} • Semester {user?.semester}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
               <Button
                 variant={theme === 'light' ? 'default' : 'ghost'}
