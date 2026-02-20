@@ -54,7 +54,7 @@ Use this data to personalize your responses.`;
     console.log("Sending request to Google Gemini API");
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
