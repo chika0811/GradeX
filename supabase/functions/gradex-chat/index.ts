@@ -25,7 +25,7 @@ serve(async (req: Request) => {
   try {
     const { messages, userContext } = await req.json();
     // @ts-ignore
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "AIzaSyA1xDOuwEmJl7z_Bf3eWWdO9GZ-miKvCQE";
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "AIzaSyBLP_c45SeyOj6L2nAq4g9zkcfnIKMRQh0";
     
     if (!GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured");
@@ -54,7 +54,7 @@ Use this data to personalize your responses.`;
     console.log("Sending request to Google Gemini API");
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
