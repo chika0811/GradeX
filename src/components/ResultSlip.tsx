@@ -16,12 +16,15 @@ interface ResultSlipProps {
 const ResultSlip = forwardRef<HTMLDivElement, ResultSlipProps>(({ user, courses, semesterParam, levelParam, gpa }, ref) => {
   const displayLevel = levelParam || user?.level || 'N/A';
   const displaySemester = semesterParam || 'Results';
-  const session = "2023/2024"; // Dynamic session would be better if tracked
+  
+  // Pull session from local storage (set during Course Add) or fallback to current year
+  const currentYear = new Date().getFullYear();
+  const session = localStorage.getItem('gradex_current_session') || `${currentYear - 1}/${currentYear}`;
 
   const passportImage = localStorage.getItem('gradex_user_passport');
 
   return (
-    <div ref={ref} className="p-10 bg-white text-black fon6t-sans min-w-[800px]">
+    <div ref={ref} className="p-10 bg-white text-black font-sans min-w-[800px]">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -41,49 +44,45 @@ const ResultSlip = forwardRef<HTMLDivElement, ResultSlipProps>(({ user, courses,
       {/* Profile Section */}
       <div className="flex gap-8 mb-10 text-sm">
         {/* Passport Placeholder */}
-        <div className="w-32 h-32 bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
+        <div className="w-32 h-32 bg-gray-200 flex items-center justify-center border-4 border-gray-100 overflow-hidden shrink-0 rounded-full shadow-sm">
            {passportImage ? (
              <img src={passportImage} alt="Passport" className="w-full h-full object-cover" />
            ) : (
-             <span className="text-xs text-center text-gray-500">Passport Photograph</span>
+             <span className="text-xs text-center text-gray-500 px-2">Passport Photograph</span>
            )}
         </div>
 
-        <div className="flex-1 grid grid-cols-2 gap-x-12 gap-y-2">
-            <div className="flex">
+        <div className="flex-1 grid grid-cols-2 gap-x-12 gap-y-3 content-start">
+            <div className="flex items-start">
                 <span className="font-semibold w-24">Full Name:</span>
-                <span className="uppercase font-bold">{user?.name}</span>
+                <span className="uppercase font-bold break-words">{user?.name}</span>
             </div>
-            <div className="flex">
+            <div className="flex items-start">
                 <span className="font-semibold w-24">Matric No:</span>
-                <span className="font-bold">N/A</span> 
+                <span className="font-bold uppercase break-words">{user?.matric_no || "N/A"}</span> 
             </div>
             
-            <div className="flex">
+            <div className="flex items-start">
                 <span className="font-semibold w-24">Faculty:</span>
-                <span className="uppercase font-bold">{user?.faculty || "N/A"}</span>
+                <span className="uppercase font-bold break-words">{user?.faculty || "N/A"}</span>
             </div>
-            <div className="flex">
+            <div className="flex items-start">
                  <span className="font-semibold w-24">Department:</span>
-                 <span className="font-bold uppercase">{user?.department || "N/A"}</span>
+                 <span className="font-bold uppercase break-words">{user?.department || "N/A"}</span>
             </div>
 
-            <div className="flex">
-                <span className="font-semibold w-24">Entry Mode:</span>
-                <span className="font-bold">UTME</span>
-            </div>
-            <div className="flex">
+            <div className="flex items-start">
                 <span className="font-semibold w-24">Level:</span>
                 <span className="font-bold uppercase">{displayLevel}</span>
             </div>
-
-            <div className="flex">
-                <span className="font-semibold w-24">Session:</span>
-                <span className="font-bold">{session}</span>
-            </div>
-             <div className="flex">
+            <div className="flex items-start">
                 <span className="font-semibold w-24">Semester:</span>
                 <span className="font-bold uppercase">{displaySemester}</span>
+            </div>
+
+            <div className="flex items-start">
+                <span className="font-semibold w-24">Session:</span>
+                <span className="font-bold">{session}</span>
             </div>
         </div>
       </div>

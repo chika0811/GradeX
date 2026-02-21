@@ -8,6 +8,7 @@ import { Plus, BookOpen, AlertCircle, Settings, Sparkles, Loader2, Sun, Moon, Mo
 import GPAChart from '@/components/GPAChart';
 import { useState, useEffect } from 'react';
 import { getStoredData, saveTheme } from '@/lib/storage';
+import { ProfileCompletion } from '@/components/ProfileCompletion';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -100,8 +101,9 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 pb-32 space-y-6 scrollbar-hide">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <main className="flex-1 overflow-y-auto pb-32 space-y-6 scrollbar-hide">
+        <ProfileCompletion />
+        <div className="max-w-7xl mx-auto px-4 space-y-6">
         {/* CGPA Card */}
         <Card className="p-8 text-center bg-gradient-primary text-white shadow-elevated">
           <div className="flex flex-col items-center">

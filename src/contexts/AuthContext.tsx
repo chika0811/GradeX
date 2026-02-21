@@ -11,6 +11,7 @@ export interface UserProfile {
   department?: string;
   faculty?: string;
   institution?: string;
+  matric_no?: string;
   about?: string;
   isAdmin?: boolean;
 }
@@ -20,7 +21,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  signup: (name: string, email: string, password: string, institution: string, faculty: string, department: string) => Promise<{ error: string | null }>;
+  signup: (name: string, email: string, password: string, institution: string, faculty: string, department: string, matric_no: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         department: profile.department || '',
         faculty: profile.faculty || '',
         institution: profile.institution || '',
+        matric_no: profile.matric_no || '',
         about: profile.about || '',
         isAdmin: !!roleData,
       });
@@ -97,7 +99,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signup = async (name: string, email: string, password: string, institution: string, faculty: string, department: string) => {
+  const signup = async (name: string, email: string, password: string, institution: string, faculty: string, department: string, matric_no: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
     
     const { error } = await supabase.auth.signUp({
@@ -112,6 +114,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           department,
           faculty,
           institution,
+          matric_no,
         },
       },
     });
@@ -158,6 +161,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         level: updates.level,
         semester: updates.semester,
         about: updates.about,
+        institution: updates.institution,
+        faculty: updates.faculty,
+        department: updates.department,
+        matric_no: updates.matric_no,
       })
       .eq('id', session.user.id);
 

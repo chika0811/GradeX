@@ -51,7 +51,7 @@ export function SavedResponses() {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[400px] sm:w-[540px]" onClick={(e) => e.stopPropagation()}>
         <SheetHeader>
           <div className="flex items-center justify-between">
             <SheetTitle>Saved Responses</SheetTitle>

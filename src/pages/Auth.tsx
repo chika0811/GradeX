@@ -20,6 +20,7 @@ export default function Auth() {
     institution: '',
     faculty: '',
     department: '',
+    matric_no: '',
   });
 
   const { login, signup, session, loading } = useAuth();
@@ -61,11 +62,12 @@ export default function Auth() {
 
         const { error } = await signup(
           formData.name, 
-          formData.email, 
+          formData.email,
           formData.password, 
           formData.institution,
           formData.faculty,
-          formData.department
+          formData.department,
+          formData.matric_no
         );
         
         if (error) {
@@ -190,6 +192,19 @@ export default function Auth() {
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                     placeholder="e.g., Computer Science"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="matric_no">
+                    Matric Number
+                  </Label>
+                  <Input
+                    id="matric_no"
+                    value={formData.matric_no}
+                    onChange={(e) => setFormData({ ...formData, matric_no: e.target.value })}
+                    placeholder="e.g., MAT/123/456"
                     disabled={isLoading}
                   />
                 </div>

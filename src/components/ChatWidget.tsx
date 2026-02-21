@@ -168,7 +168,14 @@ export function ChatWidget() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (widgetRef.current && !widgetRef.current.contains(event.target as Node)) {
+      // Ignore clicks if a Radix dialog (like the Saved Responses Sheet) is open.
+      // Radix handles its own outside clicks, and we don't want to close the ChatWidget.
+      const target = event.target as Element;
+      if (document.querySelector('[role="dialog"]') || target.closest('[role="dialog"]')) {
+        return;
+      }
+
+      if (widgetRef.current && !widgetRef.current.contains(target as Node)) {
         setIsOpen(false);
       }
     }
