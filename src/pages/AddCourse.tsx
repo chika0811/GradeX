@@ -136,7 +136,7 @@ export default function AddCourse() {
                 id="units"
                 type="number"
                 min="1"
-                max="6"
+                max="20"
                 value={formData.units}
                 onChange={(e) => setFormData({ ...formData, units: parseInt(e.target.value) })}
                 required
