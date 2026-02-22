@@ -9,6 +9,9 @@ import { ArrowLeft, Edit, Trash2, AlertCircle, Loader2, Download, Upload, FileTe
 import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { FileOpener } from '@capacitor-community/file-opener';
 import ResultSlip from '@/components/ResultSlip';
 import {
   DropdownMenu,
@@ -250,11 +253,30 @@ export default function Courses() {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Result_${printState.semester.replace(/\s/g, '_')}.pdf`);
+      
+      const fileName = `Result_${printState.semester.replace(/\s/g, '_')}.pdf`;
+
+      if (Capacitor.isNativePlatform()) {
+        const pdfBase64 = pdf.output('datauristring').split(',')[1];
+        
+        const fileWriteResult = await Filesystem.writeFile({
+           path: fileName,
+           data: pdfBase64,
+           directory: Directory.Cache
+        });
+
+        await FileOpener.open({
+           filePath: fileWriteResult.uri,
+           contentType: 'application/pdf',
+           openWithDefault: true
+        });
+      } else {
+        pdf.save(fileName);
+      }
       
       toast({
         title: 'Download Complete',
-        description: 'Your result slip has been downloaded successfully.',
+        description: 'Your result slip has been generated successfully.',
       });
     } catch (error) {
       console.error(error);

@@ -64,7 +64,7 @@ export default function Settings() {
     about: user?.about || '',
     level: user?.level || '100L',
     semester: user?.semester || '1st',
-    profilePic: localStorage.getItem('gradex_user_passport') || '',
+    profilePic: user?.avatar_url || localStorage.getItem('gradex_user_passport') || '',
   });
 
 
@@ -80,8 +80,10 @@ export default function Settings() {
         name: user.name || '',
         email: user.email || '',
         about: user.about || '',
+        about: user.about || '',
         level: user.level || '100L',
         semester: user.semester || '1st',
+        profilePic: user.avatar_url || prev.profilePic,
       }));
     }
   }, [user]);
@@ -278,17 +280,47 @@ export default function Settings() {
                         ctx.fillRect(0, 0, width, height);
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Compress to JPEG with 0.8 quality
+                        // Cache base64 locally for offline PDF rendering
                         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                        
-                        setFormData(prev => ({ ...prev, profilePic: compressedBase64 }));
                         try {
                           localStorage.setItem('gradex_user_passport', compressedBase64);
-                          toast({ title: 'Success', description: 'Profile photo updated successfully.' });
                         } catch (err) {
-                           console.error('Storage error:', err);
-                           toast({ title: 'Warning', description: 'Image storage full. Photo will persist for this session only.', variant: 'default' });
+                           console.warn('Storage full for offline cache:', err);
                         }
+
+                        // Provide immediate UI feedback by rendering local base64
+                        setFormData(prev => ({ ...prev, profilePic: compressedBase64 }));
+
+                        canvas.toBlob(async (blob) => {
+                          if (!blob) throw new Error('Failed to create Image Blob');
+                          
+                          try {
+                            const fileName = `${user?.id}/${Date.now()}.jpg`;
+                            
+                            // Upload to Supabase Storage
+                            const { error: uploadError } = await supabase.storage
+                              .from('avatars')
+                              .upload(fileName, blob, {
+                                contentType: 'image/jpeg',
+                                upsert: true
+                              });
+                              
+                            if (uploadError) throw uploadError;
+                            
+                            // Get Public URL
+                            const { data: { publicUrl } } = supabase.storage
+                              .from('avatars')
+                              .getPublicUrl(fileName);
+                              
+                            // Save to Profile
+                            await updateProfile({ avatar_url: publicUrl });
+                            toast({ title: 'Success', description: 'Profile photo updated globally.' });
+                          } catch (err: any) {
+                            console.error('Storage error:', err);
+                            toast({ title: 'Error', description: err.message || 'Failed to upload photo to cloud. Photo is cached locally.', variant: 'destructive' });
+                          }
+                        }, 'image/jpeg', 0.8);
+                        
                       } catch (error) {
                         console.error('Processing error:', error);
                         toast({ title: 'Error', description: 'Failed to process image.', variant: 'destructive' });

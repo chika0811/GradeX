@@ -1,0 +1,47 @@
+﻿To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+.\gradlew.bat : 
+At line:1 char:90
++ ... tudio\jbr"; 
+.\gradlew.bat assembleDebug 
+> build_log2.txt 2>&1; 
+Get-Co ...
++                 ~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (:Stri  
+  ng) [], RemoteException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+FAILURE: Build failed with 
+an exception.
+
+* Where:
+Build file 'C:\Users\USER\Gr
+adeX\android\build.gradle' 
+line: 38
+
+* What went wrong:
+A problem occurred 
+evaluating root project 
+'android'.
+> Could not get unknown 
+property 'org' for project 
+':app' of type 
+org.gradle.api.Project.
+
+* Try:
+> Run with --stacktrace 
+option to get the stack 
+trace.
+> Run with --info or 
+--debug option to get more 
+log output.
+> Run with --scan to get 
+full insights.
+> Get more help at 
+https://help.gradle.org.
+
+BUILD FAILED in 12s

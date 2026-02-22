@@ -24,6 +24,7 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
@@ -64,6 +65,19 @@ export function ChatWidget() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [isOpen, messages]);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -259,11 +273,11 @@ export function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Ask about CGPA..."
+                placeholder={isOnline ? "Ask about CGPA..." : "Chatbot is unavailable offline."}
                 className="flex-1 h-10 text-sm"
-                disabled={isLoading}
+                disabled={isLoading || !isOnline}
               />
-              <Button size="icon" className="h-10 w-10" onClick={handleSendMessage} disabled={isLoading}>
+              <Button size="icon" className="h-10 w-10" onClick={handleSendMessage} disabled={isLoading || !isOnline}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </div>

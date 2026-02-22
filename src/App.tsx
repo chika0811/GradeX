@@ -3,10 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { App as CapacitorApp } from '@capacitor/app';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CourseProvider } from "@/contexts/CourseContext";
 import { ChatProvider } from "@/contexts/ChatContext";
+import { processOfflineQueue } from "@/lib/offlineSync";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
 import SplashScreen from "@/components/SplashScreen";
 import Auth from "./pages/Auth";
@@ -71,6 +73,24 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { session, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleBackButton = () => {
+       if (location.pathname === '/dashboard' || location.pathname === '/auth') {
+           CapacitorApp.exitApp();
+       } else {
+           navigate(-1);
+       }
+    };
+
+    CapacitorApp.addListener('backButton', handleBackButton);
+
+    return () => {
+       CapacitorApp.removeAllListeners();
+    };
+  }, [navigate, location]);
 
   if (loading) {
     return (
@@ -102,6 +122,7 @@ function AppRoutes() {
 
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     // Check if user has seen splash before this session
@@ -109,7 +130,17 @@ function AppContent() {
     if (hasSeenSplash) {
       setShowSplash(false);
     }
-  }, []);
+
+    // Process generic offline queue when internet is restored
+    const handleOnline = () => {
+      if (user) {
+         processOfflineQueue(user.id);
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [user]);
 
   const handleSplashComplete = () => {
     sessionStorage.setItem('hasSeenSplash', 'true');

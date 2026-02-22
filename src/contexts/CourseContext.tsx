@@ -2,6 +2,9 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, t
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { Course, Grade, calculateGPA, calculateCGPA, getCarryoverCourses, CGPACalculationResult, calculateGrade } from '@/lib/grading';
+import { enqueueSyncAction } from '@/lib/offlineSync';
+
+const CACHE_KEY = 'gradex_cached_courses';
 
 interface CourseContextType {
   courses: Course[];
@@ -43,6 +46,19 @@ export function CourseProvider({ children }: CourseProviderProps) {
       return;
     }
 
+    // Immediately load from cache
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      setCourses(JSON.parse(cachedData));
+      setLoading(false);
+    }
+
+    if (!navigator.onLine) {
+       // Stop fetching if offline; rely on cache
+       setLoading(false);
+       return;
+    }
+
     const { data, error } = await supabase
       .from('courses')
       .select('*')
@@ -51,8 +67,8 @@ export function CourseProvider({ children }: CourseProviderProps) {
 
     if (error) {
       console.error('Error fetching courses:', error);
-    } else {
-      setCourses(data?.map(c => ({
+    } else if (data) {
+      const formattedCourses = data.map(c => ({
         id: c.id,
         code: c.code,
         title: c.title,
@@ -61,7 +77,9 @@ export function CourseProvider({ children }: CourseProviderProps) {
         grade: toGrade(c.grade),
         level: c.level,
         semester: c.semester,
-      })) || []);
+      }));
+      setCourses(formattedCourses);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(formattedCourses));
     }
     setLoading(false);
   };
@@ -74,11 +92,7 @@ export function CourseProvider({ children }: CourseProviderProps) {
     if (!session?.user) return;
 
     const grade = calculateGrade(course.score);
-    
-    const { data, error } = await supabase
-      .from('courses')
-      .insert({
-        user_id: session.user.id,
+    const newCourseData = {
         code: course.code,
         title: course.title,
         units: course.units,
@@ -86,26 +100,55 @@ export function CourseProvider({ children }: CourseProviderProps) {
         grade,
         level: course.level,
         semester: course.semester,
-      })
-      .select()
-      .single();
+    };
+    
+    // Optimistic UI Update & Cache Save
+    const optimisticId = `local_${Date.now()}`;
+    setCourses(prev => {
+        const next = [{ id: optimisticId, ...newCourseData }, ...prev];
+        localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+        return next;
+    });
 
-    if (error) {
-      console.error('Error adding course:', error);
-      throw error;
+    if (!navigator.onLine) {
+        enqueueSyncAction({ type: 'ADD_COURSE', payload: newCourseData });
+        return;
     }
 
-    if (data) {
-      setCourses(prev => [{
-        id: data.id,
-        code: data.code,
-        title: data.title,
-        units: Number(data.units),
-        score: Number(data.score),
-        grade: toGrade(data.grade),
-        level: data.level,
-        semester: data.semester,
-      }, ...prev]);
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .insert({ ...newCourseData, user_id: session.user.id })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCourses(prev => {
+           const next = prev.map(c => c.id === optimisticId ? {
+             id: data.id,
+             code: data.code,
+             title: data.title,
+             units: Number(data.units),
+             score: Number(data.score),
+             grade: toGrade(data.grade),
+             level: data.level,
+             semester: data.semester,
+           } : c);
+           localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+           return next;
+        });
+      }
+    } catch (error) {
+       console.error('Error adding course:', error);
+       // Revert optimistic update on failure
+       setCourses(prev => {
+           const next = prev.filter(c => c.id !== optimisticId);
+           localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+           return next;
+       });
+       throw error;
     }
   }, [session?.user]);
 
@@ -117,6 +160,30 @@ export function CourseProvider({ children }: CourseProviderProps) {
       updateData.grade = calculateGrade(updates.score);
     }
 
+    // Optimistic Update & Cache
+    setCourses(prev => {
+      const next = prev.map(course => {
+        if (course.id === id) {
+          const updated = { ...course, ...updates };
+          if (updates.score !== undefined) {
+            updated.grade = calculateGrade(updates.score);
+          }
+          return updated;
+        }
+        return course;
+      });
+      localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
+
+    if (!navigator.onLine) {
+        // Enqueue if the course exists remotely (wasn't just created locally without sync)
+        if (!id.startsWith('local_')) {
+             enqueueSyncAction({ type: 'UPDATE_COURSE', payload: { id, updates: updateData }});
+        }
+        return;
+    }
+
     const { error } = await supabase
       .from('courses')
       .update(updateData)
@@ -125,23 +192,27 @@ export function CourseProvider({ children }: CourseProviderProps) {
 
     if (error) {
       console.error('Error updating course:', error);
+       // Ideally we could rollback here by keeping previous state, but we'll surface the error
       throw error;
     }
-
-    setCourses(prev => prev.map(course => {
-      if (course.id === id) {
-        const updated = { ...course, ...updates };
-        if (updates.score !== undefined) {
-          updated.grade = calculateGrade(updates.score);
-        }
-        return updated;
-      }
-      return course;
-    }));
   }, [session?.user]);
 
   const deleteCourse = useCallback(async (id: string) => {
     if (!session?.user) return;
+
+    // Optimistic Delete & Cache
+    setCourses(prev => {
+       const next = prev.filter(course => course.id !== id);
+       localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+       return next;
+    });
+
+    if (!navigator.onLine) {
+        if (!id.startsWith('local_')) {
+            enqueueSyncAction({ type: 'DELETE_COURSE', payload: { id }});
+        }
+        return;
+    }
 
     const { error } = await supabase
       .from('courses')
@@ -153,8 +224,6 @@ export function CourseProvider({ children }: CourseProviderProps) {
       console.error('Error deleting course:', error);
       throw error;
     }
-
-    setCourses(prev => prev.filter(course => course.id !== id));
   }, [session?.user]);
 
   const getCurrentSemesterCourses = useCallback(() => {

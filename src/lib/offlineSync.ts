@@ -1,14 +1,14 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Course } from '@/lib/grading';
-import { UserProfile } from '@/contexts/AuthContext';
+import { supabase } from "@/integrations/supabase/client";
+import { Course } from "@/lib/grading";
+import { UserProfile } from "@/contexts/AuthContext";
 
 export type SyncAction =
-  | { type: 'ADD_COURSE'; payload: any }
-  | { type: 'UPDATE_COURSE'; payload: { id: string; updates: Partial<Course> } }
-  | { type: 'DELETE_COURSE'; payload: { id: string } }
-  | { type: 'UPDATE_PROFILE'; payload: Partial<UserProfile> };
+  | { type: "ADD_COURSE"; payload: any }
+  | { type: "UPDATE_COURSE"; payload: { id: string; updates: Partial<Course> } }
+  | { type: "DELETE_COURSE"; payload: { id: string } }
+  | { type: "UPDATE_PROFILE"; payload: Partial<UserProfile> };
 
-const SYNC_QUEUE_KEY = 'gradex_offline_sync_queue';
+const SYNC_QUEUE_KEY = "gradex_offline_sync_queue";
 
 export function getSyncQueue(): SyncAction[] {
   const data = localStorage.getItem(SYNC_QUEUE_KEY);
@@ -32,48 +32,48 @@ export async function processOfflineQueue(userId: string) {
   if (queue.length === 0) return;
 
   console.log(`Processing ${queue.length} offline actions...`);
-  
+
   const remainingQueue: SyncAction[] = [];
 
   for (const action of queue) {
     try {
       switch (action.type) {
-        case 'ADD_COURSE': {
+        case "ADD_COURSE": {
           const { error } = await supabase
-            .from('courses')
+            .from("courses")
             .insert({ ...action.payload, user_id: userId });
           if (error) throw error;
           break;
         }
-        case 'UPDATE_COURSE': {
+        case "UPDATE_COURSE": {
           const { error } = await supabase
-            .from('courses')
+            .from("courses")
             .update(action.payload.updates)
-            .eq('id', action.payload.id)
-            .eq('user_id', userId);
+            .eq("id", action.payload.id)
+            .eq("user_id", userId);
           if (error) throw error;
           break;
         }
-        case 'DELETE_COURSE': {
+        case "DELETE_COURSE": {
           const { error } = await supabase
-            .from('courses')
+            .from("courses")
             .delete()
-            .eq('id', action.payload.id)
-            .eq('user_id', userId);
+            .eq("id", action.payload.id)
+            .eq("user_id", userId);
           if (error) throw error;
           break;
         }
-        case 'UPDATE_PROFILE': {
+        case "UPDATE_PROFILE": {
           const { error } = await supabase
-            .from('profiles')
+            .from("profiles")
             .update(action.payload)
-            .eq('id', userId);
+            .eq("id", userId);
           if (error) throw error;
           break;
         }
       }
     } catch (err) {
-      console.error('Failed to sync action:', action, err);
+      console.error("Failed to sync action:", action, err);
       // If it fails (e.g., server error distinct from offline), keep it in the queue to try later
       remainingQueue.push(action);
     }
@@ -81,8 +81,10 @@ export async function processOfflineQueue(userId: string) {
 
   saveSyncQueue(remainingQueue);
   if (remainingQueue.length === 0) {
-    console.log('Offline queue processed successfully.');
+    console.log("Offline queue processed successfully.");
   } else {
-    console.warn(`Finished processing, but ${remainingQueue.length} items failed and remain in queue.`);
+    console.warn(
+      `Finished processing, but ${remainingQueue.length} items failed and remain in queue.`,
+    );
   }
 }

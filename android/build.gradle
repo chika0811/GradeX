@@ -33,6 +33,11 @@ subprojects {
                     targetCompatibility = JavaVersion.VERSION_17
                 }
             }
+            project.tasks.configureEach { task ->
+                if (task.name.contains("compile") && task.name.contains("Kotlin")) {
+                    task.kotlinOptions.jvmTarget = "17"
+                }
+            }
         }
     }
 }
