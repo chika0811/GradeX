@@ -301,8 +301,7 @@ export default function Settings() {
                             const { error: uploadError } = await supabase.storage
                               .from('avatars')
                               .upload(fileName, blob, {
-                                contentType: 'image/jpeg',
-                                upsert: true
+                                contentType: 'image/jpeg'
                               });
                               
                             if (uploadError) throw uploadError;
