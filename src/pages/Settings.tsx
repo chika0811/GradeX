@@ -80,7 +80,6 @@ export default function Settings() {
         name: user.name || '',
         email: user.email || '',
         about: user.about || '',
-        about: user.about || '',
         level: user.level || '100L',
         semester: user.semester || '1st',
         profilePic: user.avatar_url || prev.profilePic,

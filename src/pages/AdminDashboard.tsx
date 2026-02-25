@@ -24,9 +24,19 @@ import {
   TrendingUp,
   ArrowLeft,
   MessageSquare,
+  Mail,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface UserProfile {
   id: string;
@@ -62,6 +72,62 @@ export default function AdminDashboard() {
     activeUsers: 0,
   });
   const [signupData, setSignupData] = useState<SignupData[]>([]);
+
+  // Broadcast / Send Feedback Logic
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSendBroadcast = async () => {
+    if (selectedEmails.length === 0) {
+      toast({ title: 'Error', description: 'Please select at least one user.', variant: 'destructive' });
+      return;
+    }
+    if (!broadcastSubject.trim() || !broadcastMessage.trim()) {
+      toast({ title: 'Error', description: 'Please enter a subject and a message.', variant: 'destructive' });
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-admin-email', {
+        body: {
+          emails: selectedEmails,
+          subject: broadcastSubject,
+          message: broadcastMessage,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Server connection failed.');
+      }
+      
+      if (data && data.error) {
+        throw new Error(`Resend API: ${data.error}`);
+      }
+
+      toast({ title: 'Success', description: `Broadcast email sent to ${selectedEmails.length} users!` });
+      setIsBroadcasting(false);
+      setBroadcastSubject('');
+      setBroadcastMessage('');
+      setSelectedEmails([]);
+    } catch (error: any) {
+      console.error('Broadcast error:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to send broadcast.', variant: 'destructive' });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEmails.length === users.length) {
+      setSelectedEmails([]); // deselect all
+    } else {
+      setSelectedEmails(users.map(u => u.email).filter(Boolean) as string[]); // select all
+    }
+  };
 
   useEffect(() => {
     // Check if user is admin
@@ -255,6 +321,102 @@ export default function AdminDashboard() {
         </div>
       </header>
 
+      {/* Send Feedback Dialog */}
+      <Dialog open={isBroadcasting} onOpenChange={setIsBroadcasting}>
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Broadcast Email Message</DialogTitle>
+            <DialogDescription>
+              Select users and write a custom email to broadcast directly to their inboxes.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto md:overflow-hidden grid md:grid-cols-2 gap-4 pb-4 md:pb-0 pr-1 md:pr-0">
+            {/* User Selection */}
+            <div className="flex flex-col border border-border rounded-lg overflow-hidden bg-muted/10 h-[250px] md:h-[400px] shrink-0">
+              <div className="p-3 bg-muted/30 border-b border-border flex items-center justify-between">
+                <span className="font-semibold text-sm">Select Recipients</span>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="select-all" 
+                    checked={users.length > 0 && selectedEmails.length === users.length}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <label
+                    htmlFor="select-all"
+                    className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Select All ({users.length})
+                  </label>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {users.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  users.map(u => (
+                    <div key={u.id} className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer" onClick={() => {
+                        if (u.email) {
+                          setSelectedEmails(prev => 
+                            prev.includes(u.email as string) ? prev.filter(e => e !== u.email) : [...prev, u.email as string]
+                          );
+                        }
+                    }}>
+                      <Checkbox 
+                        checked={!!u.email && selectedEmails.includes(u.email)}
+                        onCheckedChange={(checked) => {
+                          if (u.email) {
+                             if (checked) setSelectedEmails(prev => [...prev, u.email as string]);
+                             else setSelectedEmails(prev => prev.filter(e => e !== u.email));
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{u.name || 'Unknown'}</span>
+                        <span className="text-xs text-muted-foreground">{u.email}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Message Composition */}
+            <div className="flex flex-col space-y-4 h-[350px] md:h-[400px] shrink-0">
+              <div className="shrink-0">
+                <label className="text-sm font-medium mb-1 block">Subject</label>
+                <Input 
+                  placeholder="e.g. Important GradeX Update" 
+                  value={broadcastSubject}
+                  onChange={(e) => setBroadcastSubject(e.target.value)}
+                  disabled={isSending}
+                />
+              </div>
+              <div className="flex-1 flex flex-col min-h-[150px]">
+                <label className="text-sm font-medium mb-1 block">Message</label>
+                <Textarea 
+                  placeholder="Type your message here..." 
+                  className="flex-1 resize-none"
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  disabled={isSending}
+                />
+              </div>
+              <Button onClick={handleSendBroadcast} disabled={isSending || selectedEmails.length === 0} className="w-full shrink-0">
+                {isSending ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending to {selectedEmails.length} users...</>
+                ) : (
+                  <><Mail className="w-4 h-4 mr-2" /> Send Broadcast ({selectedEmails.length} selected)</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 space-y-8 scrollbar-hide">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -306,8 +468,12 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <div className="flex justify-end">
-          <Button onClick={() => navigate('/admin/feedback')}>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setIsBroadcasting(true)}>
+            <Mail className="w-4 h-4 mr-2" />
+            Send Feedback
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/admin/feedback')}>
             <MessageSquare className="w-4 h-4 mr-2" />
             Check Feedback
           </Button>

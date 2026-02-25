@@ -47,39 +47,52 @@ serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
     if (!RESEND_API_KEY) {
-       throw new Error('RESEND_API_KEY is missing from environment');
+      throw new Error('RESEND_API_KEY is missing from environment');
     }
-    
-    // Format the email using HTML to handle line breaks
+
     const htmlMessage = message.replace(/\n/g, '<br/>');
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'GradeX Admin <onboarding@resend.dev>',
-        to: emails,
-        subject: subject || 'Notice from GradeX Administrator',
-        html: `
-          <div style="font-family: sans-serif; padding: 20px;">
-             ${htmlMessage}
-             <hr style="margin-top: 30px; border: 0; border-top: 1px solid #eee;" />
-             <p style="text-align: center; color: #888; font-size: 12px;">GradeX Administration</p>
-          </div>
-        `,
-      }),
-    });
-
-    const resendData = await res.json();
-    
-    if (!res.ok) {
-        throw new Error(`Resend Error [${res.status}]: ${resendData.message || res.statusText}`);
+    const BATCH_SIZE = 49;
+    const emailChunks = [];
+    for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+      emailChunks.push(emails.slice(i, i + BATCH_SIZE));
     }
 
-    return new Response(JSON.stringify({ success: true, data: resendData }), {
+    let lastData = null;
+    for (const chunk of emailChunks) {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: 'GradeX Admin <onboarding@resend.dev>',
+          to: 'GradeX Community <onboarding@resend.dev>', // Hidden primary recipient
+          bcc: chunk, // Users placed in BCC for privacy and hitting Resend's 50 recipient limit per batch
+          subject: subject || 'Notice from GradeX Administrator',
+          html: `
+            <div style="font-family: sans-serif; padding: 20px;">
+               ${htmlMessage}
+               <hr style="margin-top: 30px; border: 0; border-top: 1px solid #eee;" />
+               <p style="text-align: center; color: #888; font-size: 12px;">GradeX Administration</p>
+            </div>
+          `,
+        }),
+      });
+
+      const resendData = await res.json();
+      lastData = resendData;
+      
+      if (!res.ok) {
+          return new Response(JSON.stringify({ success: false, error: resendData.message || res.statusText }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          });
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, data: lastData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
